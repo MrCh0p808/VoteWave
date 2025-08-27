@@ -8,8 +8,8 @@ COPY requirements.txt .
 
 RUN pip install --no-cache-dir -r requirements.txt #Installing Python Dependencies
 
-COPY . .    # Copy Code Into Container
+COPY . .
 
-EXPOSE 5000 # Expose App Port
+EXPOSE 5000
 
-CMD ["python", "app.py"]  # Run App 
+CMD ["python", "app.py"] 
