@@ -1,25 +1,22 @@
-#main application app.py
-
+# app.py
 from flask import Flask, request, jsonify
 
 app = Flask(__name__)
-#In-Memory Database Filhaal
-#Baad Me Koi Acchi DB use karenge like PostgreSQL
+
+# --- In-memory database ---
 db = {
     "users": {},
     "polls": {},
     "votes": {}
 }
-#Auto-Incrementing ID's Ke Liye Counters Ka Istemaal
 next_user_id = 1
 next_poll_id = 1
 
 @app.route("/")
 def index():
     return "Welcome to VoteWave Phase 1!"
-#----------------------------------------------------------#
-#----------------------USER MANAGEMENT---------------------#
-#----------------------------------------------------------#
+
+# --- User Management ---
 @app.route("/register", methods=["POST"])
 def register_user():
     global next_user_id
@@ -31,14 +28,17 @@ def register_user():
     db["users"][username] = {"id": next_user_id, "username": username}
     next_user_id += 1
     return jsonify({"message": "User registered successfully", "user": db["users"][username]}), 201
-#----------------------------------------------------------# #----------------------POLL MANAGEMENT---------------------# #----------------------------------------------------------#
+
+# --- Poll Management ---
 @app.route("/poll", methods=["POST"])
 def create_poll():
     global next_poll_id
     data = request.json
-#Auth Simulate Karne Ke Liye User Ka Header Check Karenge
- if not request.headers.get("X-Username"):
-         return jsonify({"error": "User authentication required"}), 401
+    
+    # Auth Simulate Karne Ke Liye User Ka Header Check Karenge
+    # CORRECT INDENTATION HERE: This 'if' block is now inside the function
+    if not request.headers.get("X-Username"):
+        return jsonify({"error": "User authentication required"}), 401
 
     question = data.get("question")
     options = data.get("options")
@@ -60,7 +60,8 @@ def get_poll(poll_id):
     if not poll:
         return jsonify({"error": "Poll not found"}), 404
     return jsonify(poll)
-#----------------------------------------------------------# #---------------------------VOTING-------------------------# #----------------------------------------------------------#
+
+# --- Voting ---
 @app.route("/vote/<int:poll_id>", methods=["POST"])
 def cast_vote(poll_id):
     data = request.json
