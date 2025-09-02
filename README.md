@@ -9,8 +9,11 @@ ________________________________________________________________________________
 How It Works
 
 ⦁	A user registers with a chosen username.
+
 ⦁	Once registered, they can create a poll by asking a question and providing multiple options.
+
 ⦁	Other users can see that poll and vote for one of the options.
+
 ⦁	Results are updated immediately by increasing the count of the selected option.
 ___________________________________________________________________________________________________________________
 Application Code Overview (app.py)
