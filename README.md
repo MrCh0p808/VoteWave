@@ -58,6 +58,7 @@ A Dockerfile is included so you can package the application into a container.
 To build and run the image:
 
 ⦁		docker build -t votewave .
+
 ⦁		docker run -p 5000:5000 votewave
 
 Now the app will be available on http://localhost:5000.
@@ -73,7 +74,9 @@ The project also includes Terraform files (main.tf, network.tf, ec2.tf) that set
 To apply these steps:
 
 ⦁		terraform init
+
 ⦁		terraform plan
+
 ⦁		terraform apply
 
 
