@@ -1,15 +1,19 @@
 #Dockerfile
-
+# Use a lightweight Python image
 FROM python:3.9-slim
 
-WORKDIR ~/Votewave #Setting Working Directory Inside Container
+# Set working directory
+WORKDIR /Votewave
 
+# Copy requirements first (better for caching)
 COPY requirements.txt .
 
-RUN pip install --no-cache-dir -r requirements.txt #Installing Python Dependencies
+# Install dependencies
+RUN pip install --no-cache-dir -r requirements.txt
 
+# Copy the rest of the app
 COPY . .
 
-EXPOSE 5000
+# Run the Flask app
+CMD ["python", "app.py"]
 
-CMD ["python", "app.py"] 
