@@ -7,15 +7,19 @@ resource "aws_instance" "votewave_server" {
   subnet_id              = aws_subnet.votewave_subnet_a.id
   vpc_security_group_ids = [aws_security_group.votewave_sg.id]
   key_name               = aws_key_pair.votewave_key.key_name
+  associate_public_ip_address = true
 
-  user_data = <<-EOF
+user_data = <<-EOF
               #!/bin/bash
               yum update -y
-              yum install -y docker
-              systemctl start docker
-              systemctl enable docker
+              amazon-linux-extras install docker -y
+              service docker start
+              usermod -a -G docker ec2-user
+              yum install -y unzip
+              curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+              unzip awscliv2.zip
+              ./aws/install
               EOF
-
   tags = {
     Name = "VoteWave-Server"
   }

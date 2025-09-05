@@ -27,7 +27,7 @@ resource "aws_db_instance" "votewave_db" {
   instance_class         = "db.t3.micro"
   allocated_storage      = 20
   engine                 = "postgres"
-  engine_version         = "14.12"
+  engine_version         = "14.17"
   username               = "postgres"
   password               = "MustBeAtLeast8Chars"
   db_subnet_group_name   = aws_db_subnet_group.votewave_db_subnet_group.name
