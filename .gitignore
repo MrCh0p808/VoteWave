@@ -3,5 +3,6 @@
 *.backup
 *.tfstate.backup
 *.tfstate.MANUAL-BACKUP
+*.pem
 .terraform/
 venv/
