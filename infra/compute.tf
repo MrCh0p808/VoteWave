@@ -21,7 +21,6 @@ resource "aws_instance" "votewave_server" {
   subnet_id                   = aws_subnet.votewave_subnet_a.id
   associate_public_ip_address = true
   vpc_security_group_ids      = [aws_security_group.votewave_sg.id]
-
   user_data = <<-EOF
     #!/bin/bash
     yum update -y

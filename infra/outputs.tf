@@ -17,3 +17,12 @@ output "private_key_path" {
   value     = local_file.votewave_private_key.filename
   sensitive = true
 }
+
+output "db_instance_port" {
+  value = aws_db_instance.votewave_db.port
+}
+
+output "db_password" {
+  value     = random_password.db.result
+  sensitive = true
+}
