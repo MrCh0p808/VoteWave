@@ -1,25 +1,23 @@
 # .github/workflows/deploy.yml
-name: Deploy VoteWave Microservices to EC2
+name: Build and Push VoteWave Images to ECR
 
 on:
   push:
-    branches: [ "main" ] # Trigger the workflow on push to the main branch
+    branches: [ "main" ]
 
 env:
   AWS_REGION: us-east-1
   ECR_AUTH_REPOSITORY: votewave-auth-service
   ECR_POLLS_REPOSITORY: votewave-polls-service
-  
+
 jobs:
-  build-and-deploy:
+  build-and-push:
     runs-on: ubuntu-latest
-    
+
     steps:
-    # 1. Get the code from the repository
     - name: Checkout code
       uses: actions/checkout@v3
 
-    # 2. Configure AWS credentials for the runner
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v1
       with:
@@ -27,12 +25,10 @@ jobs:
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: ${{ env.AWS_REGION }}
 
-    # 3. Log in to the AWS Elastic Container Registry (ECR)
     - name: Login to Amazon ECR
       id: login-ecr
       uses: aws-actions/amazon-ecr-login@v1
 
-    # 4. Build, tag, and push the auth-service image to ECR
     - name: Build, tag, and push auth-service image
       env:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
@@ -41,7 +37,6 @@ jobs:
         docker build -t $ECR_REGISTRY/$ECR_AUTH_REPOSITORY:$IMAGE_TAG -f Dockerfile.auth .
         docker push $ECR_REGISTRY/$ECR_AUTH_REPOSITORY:$IMAGE_TAG
 
-    # 5. Build, tag, and push the polls-service image to ECR
     - name: Build, tag, and push polls-service image
       env:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
@@ -50,39 +45,3 @@ jobs:
         docker build -t $ECR_REGISTRY/$ECR_POLLS_REPOSITORY:$IMAGE_TAG -f Dockerfile.polls .
         docker push $ECR_REGISTRY/$ECR_POLLS_REPOSITORY:$IMAGE_TAG
 
-    # 6. SSH into EC2 and deploy the new containers
-    - name: Deploy to EC2
-      uses: appleboy/ssh-action@master
-      with:
-        host: ${{ secrets.EC2_HOST }}
-        username: ec2-user
-        key: ${{ secrets.EC2_PRIVATE_KEY }}
-        script: |
-          # Log in to ECR from the EC2 instance
-          aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com
-
-          # Pull the new images from ECR
-          docker pull ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_AUTH_REPOSITORY }}:${{ github.sha }}
-          docker pull ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_POLLS_REPOSITORY }}:${{ github.sha }}
-
-          # Stop and remove any old containers to prevent conflicts
-          docker stop auth-service polls-service || true
-          docker rm auth-service polls-service || true
-
-          # Run the new auth-service container
-          docker run -d --name auth-service \
-            -p 5001:5001 \
-            -e DB_HOST=${{ secrets.DB_HOST }} \
-            -e DB_NAME=postgres \
-            -e DB_USER=postgres \
-            -e DB_PASSWORD=${{ secrets.DB_PASSWORD }} \
-            ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_AUTH_REPOSITORY }}:${{ github.sha }}
-          
-          # Run the new polls-service container
-          docker run -d --name polls-service \
-            -p 5002:5002 \
-            -e DB_HOST=${{ secrets.DB_HOST }} \
-            -e DB_NAME=postgres \
-            -e DB_USER=postgres \
-            -e DB_PASSWORD=${{ secrets.DB_PASSWORD }} \
-            ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_POLLS_REPOSITORY }}:${{ github.sha }}
