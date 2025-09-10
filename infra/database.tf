@@ -40,10 +40,10 @@ resource "aws_secretsmanager_secret_version" "db_password_value" {
   identifier              = "votewave-db-instance"
   allocated_storage       = 20
   engine                  = "postgres"
-  engine_version          = "15.3"
+  engine_version          = "14.13"
   instance_class          = "db.t3.micro"
   db_name                 = "votewavedb"
-  username                = "admin"
+  username                = "votewaveadmin"
 
   # pulling password from secret manager
 
