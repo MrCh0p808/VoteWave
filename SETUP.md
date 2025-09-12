@@ -25,17 +25,17 @@ cd VoteWave
 ## 🗄️ Step 2: Provision the Terraform Backend
 The remote backend (S3 bucket + DynamoDB table) must be created first.
 
-### Step 2.1: Navigate to the backend setup directory
+### Step 2.1: Navigate to the infra setup directory
 ```bash
-cd terraform-backend
+cd infra/
 ```
 
 ### Step 2.2: Update S3 bucket name
-Edit main.tf and change the S3 bucket name to something globally unique:
+Edit backend.tf and change the S3 bucket name to something globally unique:
 ```bash
-nano main.tf
+nano backend.tf
 ```
-### Step 2.3: Initialize and create backend resources
+### Step 2.3: Initialize and create backend resources while provisioning the Main Infrastructure
 ```bash
 terraform init
 terraform apply --auto-approve
@@ -44,23 +44,8 @@ terraform apply --auto-approve
 ```bash
 cd ..
 ```
-## 🏗️ Step 3: Provision the Main Infrastructure
-Now, provision the core application infrastructure (VPC, EC2, RDS, ECR, etc.).
 
-### Step 3.1: Navigate to the main infrastructure directory
-```bash 
-cd infra
-```
-### Step 3.2: Initialize Terraform with the remote S3 backend
-```bash 
-terraform init
-```
-### Step 3.3: Apply the configuration
-```bash 
-terraform apply --auto-approve 
-```
-
-## 🔑 Step 4: Configure GitHub Secrets
+## 🔑 Step 3: Configure GitHub Secrets
 
 For the CI/CD pipeline to work, add the following secrets in your GitHub repo:
 Go to Settings > Secrets and variables > Actions.
@@ -70,7 +55,7 @@ AWS_SECRET_ACCESS_KEY → Your AWS IAM user secret key
 AWS_ACCOUNT_ID → Your 12-digit AWS account ID
 ```
 
-##⚡ Step 5: Trigger the CI Pipeline
+##⚡ Step 4: Trigger the CI Pipeline
 
 The pipeline runs on every push to the main branch.
 Make a small change, commit, and push the code.
@@ -87,3 +72,4 @@ Check the Actions tab in GitHub to watch the pipeline build and push Docker imag
 
 VoteWave is being built iteratively in four phases, each adding new layers of infrastructure, automation, and DevOps practices.
 Phase 2 (current) demonstrates cloud-native infrastructure, CI/CD pipelines, monitoring, and security working together in AWS.
+
