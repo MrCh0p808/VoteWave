@@ -28,9 +28,26 @@ Make sure you have [Terraform](https://www.terraform.io/downloads) installed and
 # Initialize Terraform
 terraform init
 ```
-### Apply infrastructure with DB credentials
+### Apply infrastructure
+Now, provision the core application infrastructure. This process is fully automated and does not require you to provide any passwords manually.
+
 ```bash
-terraform apply -var="db_username=your_user" -var="db_password=your_pass"
+# Navigate to the main infrastructure directory
+cd infra
+
+# Initialize Terraform to connect to your remote S3 backend
+terraform init
+
+# Apply the configuration to build the infrastructure
+# No variables are needed.
+terraform apply --auto-approve
+```
+### Retrieve the Generated Database Password
+The infrastructure now uses AWS Secrets Manager and a randomly generated password for maximum security. To view the new password for manual inspection or testing, you can use the output command: 
+
+```bash
+# This will display the generated password
+terraform output -sensitive db_password
 ```
 ## ⚡ Recommended Setup
 
@@ -60,3 +77,4 @@ This project is open-source under the [MIT LICENSE](LICENSE)
 ## 🔖 Tags
 
 #Terraform #AWS #InfrastructureAsCode #CloudNative #VotingApp
+
