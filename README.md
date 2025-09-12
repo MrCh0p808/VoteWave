@@ -24,16 +24,12 @@ This repo automates the **entire infrastructure lifecycle**, from networking and
 
 Make sure you have [Terraform](https://www.terraform.io/downloads) installed and your AWS credentials configured.
 
-```bash
-# Initialize Terraform
-terraform init
-```
 ### Apply infrastructure
 Now, provision the core application infrastructure. This process is fully automated and does not require you to provide any passwords manually.
 
 ```bash
 # Navigate to the main infrastructure directory
-cd infra
+cd infra/
 
 # Initialize Terraform to connect to your remote S3 backend
 terraform init
@@ -77,4 +73,5 @@ This project is open-source under the [MIT LICENSE](LICENSE)
 ## 🔖 Tags
 
 #Terraform #AWS #InfrastructureAsCode #CloudNative #VotingApp
+
 
