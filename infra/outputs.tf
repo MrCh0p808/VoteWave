@@ -23,6 +23,6 @@ output "db_instance_port" {
 }
 
 output "db_password" {
-  value     = var.db_password
+  value     = random_password.db.result
   sensitive = true
 }

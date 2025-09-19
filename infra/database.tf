@@ -42,9 +42,14 @@ resource "random_password" "db" {
   override_special = "!@#$%&*()-_+="
 }
 
-#Local File Resource To Write Password To .env
+# Local File Resource To Write Password & DB endpoint to .env (on the machine running terraform)
 resource "local_file" "db_env" {
-  content         = "TF_VAR_db_password=${random_password.db.result}"
+  content = <<-EOT
+    DB_HOST=${aws_db_instance.votewave_db.address}
+    DB_NAME=${aws_db_instance.votewave_db.db_name}
+    DB_USER=${aws_db_instance.votewave_db.username}
+    DB_PASSWORD=${random_password.db.result}
+  EOT
   filename        = "${path.module}/.env"
   file_permission = "0600"
 }
