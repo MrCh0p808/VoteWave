@@ -1,28 +1,56 @@
 # polls-service/app.py
 import os
+import time
 import psycopg2
+import psycopg2.extras                      
 from flask import Flask, request, jsonify
+from dotenv import load_dotenv      
+
+load_dotenv()                               
 
 app = Flask(__name__)
 
 def get_db_connection():
     conn = psycopg2.connect(
-        host=os.environ.get("DB_HOST"),
-        database=os.environ.get("DB_NAME"),
-        user=os.environ.get("DB_USER"),
+        host=os.environ.get("DB_HOST", "localhost"),
+        database=os.environ.get("DB_NAME", "votewavedb"),
+        user=os.environ.get("DB_USER", "votewaveadmin"),
         password=os.environ.get("DB_PASSWORD")
     )
     return conn
 
+def wait_for_db(max_tries=12, delay=5):
+    for i in range(max_tries):
+        try:
+            conn = get_db_connection()
+            conn.close()
+            return True
+        except Exception as e:
+            print(f"[polls] DB not ready ({i+1}/{max_tries}): {e}")
+            time.sleep(delay)
+    raise RuntimeError("Database not available after retries")
+
+def init_db():
+    wait_for_db()
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS polls (
+            id SERIAL PRIMARY KEY,
+            question TEXT NOT NULL,
+            options JSONB NOT NULL
+        );
+    """)
+    conn.commit()
+    cur.close()
+    conn.close()
+
 @app.route("/poll", methods=["POST"])
 def create_poll():
-    # In a real microservice architecture, you'd verify the user exists
-    # by calling the auth-service or using a shared JWT token.
-    # For Phase 2, we'll keep the simple header check.
     if not request.headers.get("X-Username"):
-         return jsonify({"error": "User authentication required"}), 401
+        return jsonify({"error": "User authentication required"}), 401
 
-    data = request.json
+    data = request.get_json(force=True)
     question = data.get("question")
     options = data.get("options")
     if not question or not options or not isinstance(options, list):
@@ -30,8 +58,10 @@ def create_poll():
 
     conn = get_db_connection()
     cur = conn.cursor()
-    cur.execute("INSERT INTO polls (question, options) VALUES (%s, %s) RETURNING id;",
-                (question, psycopg2.extras.Json(options)))
+    cur.execute(
+        "INSERT INTO polls (question, options) VALUES (%s, %s) RETURNING id;",
+        (question, psycopg2.extras.Json(options))
+    )
     poll_id = cur.fetchone()[0]
     conn.commit()
     cur.close()
@@ -39,8 +69,7 @@ def create_poll():
 
     return jsonify({"message": "Poll created", "poll_id": poll_id}), 201
 
-# Add other routes for getting polls and voting later...
-
 if __name__ == "__main__":
-    # CREATE TABLE polls (id SERIAL PRIMARY KEY, question TEXT NOT NULL, options JSONB NOT NULL);
-    app.run(host="0.0.0.0", port=5002, debug=True)
+    init_db()
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5002)), debug=True)
+
