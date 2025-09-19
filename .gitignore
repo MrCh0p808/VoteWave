@@ -7,7 +7,14 @@
 *.pem
 .terraform/
 venv/
-Votewave_RepoTreeLocalFiles/
+VoteW:wqave_RepoTreeLocalFiles/
 *Zone.Identifier
 *.DS_Store
 *Thumbs.db
+*.png
+*.jpeg
+*.jpg
+*.3dev
+*.txt
+*.sh
+
