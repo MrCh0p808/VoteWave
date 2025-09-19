@@ -19,6 +19,10 @@ This repo automates the **entire infrastructure lifecycle**, from networking and
 - 📑 **[DOCS.md](DOCS.md)** – Phase-wise development and infrastructure documentation  
 
 ---
+## Architechture
+<img width="3840" height="3386" alt="VOTEWAVE PHASE 2 HL Architechture" src="https://github.com/user-attachments/assets/f153eb09-1e5e-486c-9258-e7474dd8d988" />
+
+---
 
 ## 🚀 Quickstart
 
@@ -73,5 +77,6 @@ This project is open-source under the [MIT LICENSE](LICENSE)
 ## 🔖 Tags
 
 #Terraform #AWS #InfrastructureAsCode #CloudNative #VotingApp
+
 
 
