@@ -7,7 +7,7 @@
 *.pem
 .terraform/
 venv/
-VoteW:wqave_RepoTreeLocalFiles/
+VoteWave_RepoTreeLocalFiles/
 *Zone.Identifier
 *.DS_Store
 *Thumbs.db
@@ -17,4 +17,4 @@ VoteW:wqave_RepoTreeLocalFiles/
 *.3dev
 *.txt
 *.sh
-
+*.log
