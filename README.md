@@ -14,9 +14,9 @@ This repo automates the **entire infrastructure lifecycle**, from networking and
 
 ## 📂 What's Inside?
 
-- 📖 **[STORY.md](STORY.md)** – The journey and inspiration behind VoteWave  
-- ⚙️ **[SETUP.md](SETUP.md)** – Step-by-step setup and deployment guide  
-- 📑 **[DOCS.md](DOCS.md)** – Phase-wise development and infrastructure documentation  
+- 📖 **[STORY.md](Docs/STORY.md)** – The journey and inspiration behind VoteWave  
+- ⚙️ **[SETUP.md](Docs/SETUP.md)** – Step-by-step setup and deployment guide  
+- 📑 **[DOCS.md](Docs/DOCS.md)** – Phase-wise development and infrastructure documentation  
 
 ---
 ## Architechture

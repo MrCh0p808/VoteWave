@@ -18,3 +18,5 @@ VoteWave_RepoTreeLocalFiles/
 *.txt
 *.sh
 *.log
+issues.json
+Misc/
