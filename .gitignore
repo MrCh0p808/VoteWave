@@ -13,6 +13,8 @@ VoteWave_RepoTreeLocalFiles/
 *Thumbs.db
 *.png
 *.jpeg
+*.gif
+*.svg
 *.jpg
 *.3dev
 *.txt
@@ -20,3 +22,4 @@ VoteWave_RepoTreeLocalFiles/
 *.log
 issues.json
 Misc/
+Phase2Issues.md
