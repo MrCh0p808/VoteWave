@@ -1,6 +1,6 @@
-variable "db_password" {
-  description = "Password for VoteWave PostgreSQL"
+variable "aws_region" {
+  description = "AWS region to deploy VoteWave"
   type        = string
-  sensitive   = true
+  default     = "us-east-1"
 }
 

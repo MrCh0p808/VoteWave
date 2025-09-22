@@ -35,11 +35,13 @@ def init_db():
     conn = get_db_connection()
     cur = conn.cursor()
     cur.execute("""
-        CREATE TABLE IF NOT EXISTS polls (
-            id SERIAL PRIMARY KEY,
-            question TEXT NOT NULL,
-            options JSONB NOT NULL
-        );
+    CREATE TABLE IF NOT EXISTS votes (
+        id SERIAL PRIMARY KEY,
+        poll_id INTEGER NOT NULL REFERENCES polls(id) ON DELETE CASCADE,
+        username VARCHAR(80) NOT NULL,
+        option TEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
     """)
     conn.commit()
     cur.close()
