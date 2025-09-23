@@ -39,12 +39,12 @@ resource "aws_db_instance" "votewave_db" {
 resource "random_password" "db" {
   length           = 16
   special          = true
-  override_special = "!@#$%&*()-_+="
+  override_special = "!#$%^&*()-_+="
 }
 
 # Local File Resource To Write Password & DB endpoint to .env (on the machine running terraform)
 resource "local_file" "db_env" {
-  content = <<-EOT
+  content         = <<-EOT
     DB_HOST=${aws_db_instance.votewave_db.address}
     DB_NAME=${aws_db_instance.votewave_db.db_name}
     DB_USER=${aws_db_instance.votewave_db.username}
