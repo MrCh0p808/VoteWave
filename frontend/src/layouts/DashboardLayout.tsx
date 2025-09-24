@@ -4,6 +4,7 @@
 import React from "react";
 import { Link, Outlet } from "react-router-dom";
 import { Bell, Home, BarChart2, Repeat, User, Settings } from "lucide-react";
+import ThemeToggle from "../components/ThemeToggle";
 
 export default function DashboardLayout() {
   return (
@@ -26,11 +27,12 @@ export default function DashboardLayout() {
 
         {/* Right: Actions */}
         <div className="flex items-center space-x-md">
-          <button className="relative">
+          <ThemeToggle />
+          <button className="relative" aria-label="notifications">
             <Bell className="w-6 h-6 text-textSecondary" />
             <span className="absolute -top-1 -right-1 w-2 h-2 bg-error rounded-full"></span>
           </button>
-          <Link to="/profile">
+          <Link to="/profile" aria-label="profile">
             <User className="w-7 h-7 text-textSecondary" />
           </Link>
         </div>
@@ -43,16 +45,16 @@ export default function DashboardLayout() {
 
       {/* Mobile Bottom Nav */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-surface shadow-md flex justify-around py-sm border-t">
-        <Link to="/home">
+        <Link to="/home" aria-label="home">
           <Home className="w-6 h-6 text-textSecondary" />
         </Link>
-        <Link to="/mypolls">
+        <Link to="/mypolls" aria-label="mypolls">
           <BarChart2 className="w-6 h-6 text-textSecondary" />
         </Link>
-        <Link to="/repost">
+        <Link to="/repost" aria-label="repost">
           <Repeat className="w-6 h-6 text-textSecondary" />
         </Link>
-        <Link to="/settings">
+        <Link to="/settings" aria-label="settings">
           <Settings className="w-6 h-6 text-textSecondary" />
         </Link>
       </nav>
