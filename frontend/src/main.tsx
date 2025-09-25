@@ -5,6 +5,8 @@ import DashboardLayout from "./layouts/DashboardLayout.tsx";
 import DashboardHome from "./pages/DashboardHome";
 import PollList from "./pages/PollList";
 import PollDetail from "./pages/PollDetail";
+import VoteWaveDemo from "./pages/VoteWaveDemo";
+import "./index.css";
 
 const router = createBrowserRouter([
   {
@@ -21,7 +23,11 @@ const router = createBrowserRouter([
       { path: "polls/:id", element: <PollDetail /> },
     ],
   },
+
+  // ✅ Standalone demo route
+  { path: "/demo", element: <VoteWaveDemo /> },
 ]);
+
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <RouterProvider router={router} />
