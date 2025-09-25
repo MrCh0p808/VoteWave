@@ -3,6 +3,8 @@ import ReactDOM from "react-dom/client";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import DashboardLayout from "./layouts/DashboardLayout.tsx";
 import DashboardHome from "./pages/DashboardHome";
+import PollList from "./pages/PollList";
+import PollDetail from "./pages/PollDetail";
 
 const router = createBrowserRouter([
   {
@@ -15,7 +17,13 @@ const router = createBrowserRouter([
       { path: "repost", element: <div className="p-6">🔁 Repost Page</div> },
       { path: "analytics", element: <div className="p-6">📈 Analytics Page</div> },
       { path: "settings", element: <div className="p-6">⚙️ Settings Page</div> },
+      { path: "polls", element: <PollList /> },
+      { path: "polls/:id", element: <PollDetail /> },
     ],
   },
 ]);
-
+ReactDOM.createRoot(document.getElementById("root")!).render(
+  <React.StrictMode>
+    <RouterProvider router={router} />
+  </React.StrictMode>
+);
