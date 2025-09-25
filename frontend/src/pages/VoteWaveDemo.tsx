@@ -143,6 +143,41 @@ export default function VoteWaveDemo() {
   const [analyticsCategory, setAnalyticsCategory] = useState<"personal" | "global">("personal");
   const [analyticsTimeFilter, setAnalyticsTimeFilter] = useState<"7d" | "30d" | "90d">("7d");
 
+  // State for VoteBooth form
+  const [createBoothOpen, setCreateBoothOpen] = useState(false);
+  const [boothName, setBoothName] = useState("");
+  const [boothDesc, setBoothDesc] = useState("");
+  const [boothMembers, setBoothMembers] = useState("");
+  const [boothStart, setBoothStart] = useState(new Date().toISOString().slice(0, 16));
+  const [boothEnd, setBoothEnd] = useState(new Date(Date.now() + 1000 * 60 * 60 * 24).toISOString().slice(0, 16));
+  const [boothCover, setBoothCover] = useState<File | null>(null);
+
+  // Submit handler
+  const submitVoteBooth = () => {
+    if (!boothName) {
+      alert("Please enter a VoteBooth name");
+      return;
+    }
+    createVoteBooth({
+      name: boothName,
+      description: boothDesc,
+      members: boothMembers.split(",").map((m) => m.trim()),
+      start: boothStart,
+      end: boothEnd,
+      cover: boothCover,
+      poll: null,
+    });
+    // reset + close form
+    setCreateBoothOpen(false);
+    setBoothName("");
+    setBoothDesc("");
+    setBoothMembers("");
+    setBoothStart(new Date().toISOString().slice(0, 16));
+    setBoothEnd(new Date(Date.now() + 1000 * 60 * 60 * 24).toISOString().slice(0, 16));
+    setBoothCover(null);
+  };
+
+
   // IntersectionObserver for infinite scroll
   useEffect(() => {
     if (!feedAnchorRef.current) return;
@@ -306,7 +341,7 @@ export default function VoteWaveDemo() {
   const subtle = darkMode ? "border-gray-700" : "border-gray-200";
 
   return (
-    <div className={`${bg} ${text} min-h-screen transition-colors duration-300 font-sans`}>
+    <div className={`${bg} ${text} flex flex-col min-h-screen transition-colors duration-300 font-sans`}>
       {/* header */}
       <header className={`sticky top-0 z-40 ${cardBg} ${subtle} border-b p-3 flex items-center justify-between`}>
         <div className="flex items-center space-x-3">
@@ -377,7 +412,7 @@ export default function VoteWaveDemo() {
       </header>
 
       {/* tabs */}
-      <nav className={`${cardBg} ${subtle} border-b flex items-center p-3 gap-4 sticky top-72 z-30`}>
+      <nav className={`${cardBg} ${subtle} border-b flex items-center p-4 gap-4 sticky top-[60px] z-30`}>
         <button onClick={() => setActiveTab("home")} className={`flex items-center gap-2 px-3 py-2 rounded-full ${activeTab === "home" ? "bg-indigo-600 text-white" : "hover:bg-gray-700/40"}`}>
           <Home className="w-4 h-4" /> <span className="hidden md:inline">Home</span>
         </button>
@@ -396,7 +431,7 @@ export default function VoteWaveDemo() {
       </nav>
 
       {/* main content */}
-      <main className="max-w-4xl mx-auto p-4 space-y-6">
+      <main className="flex-1 overflow-y-auto max-w-4xl mx-auto p-4 space-y-6">
         {/* HOME */}
         {activeTab === "home" && (
           <section className="space-y-6">
@@ -408,20 +443,24 @@ export default function VoteWaveDemo() {
                   <PlusCircle className="w-5 h-5" /> Create Poll
                 </button>
               </div>
-
+            
               {/* stories (poll buddies) */}
-              <div className="overflow-x-auto horizontal-scroll flex gap-4 items-center">
+              <div className="flex gap-4 items-center overflow-hidden relative">
                 {Array.from({ length: 10 }).map((_, i) => (
                   <div key={i} className="flex flex-col items-center min-w-[68px]">
+                    <button className="absolute left-0 top-1/2 -translate-y-1/2 bg-gray-700/50 p-2 rounded-full z-10"
+                          onClick={() => scrollRef.current?.scrollBy({ left: -200, behavior: 'smooth' })}>{"<"}</button>
                     <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-indigo-500 to-sky-400 p-1 shadow-md">
                       <div className={`${cardBg} w-full h-full rounded-full flex items-center justify-center text-sm font-bold`}>{String.fromCharCode(65 + (i % 26))}</div>
                     </div>
                     <div className="text-xs mt-1 text-gray-400">User{1 + i}</div>
+                      <button className="absolute right-0 top-1/2 -translate-y-1/2 bg-gray-700/50 p-2 rounded-full z-10"
+                          onClick={() => scrollRef.current?.scrollBy({ left: 200, behavior: 'smooth' })}>{">"}</button>
+                      </div>
+                      ))}
                   </div>
-                ))}
-              </div>
-            </div>
-
+                </div>
+              
             {/* Create poll form */}
             <div className={`overflow-hidden transition-all duration-300 ${createOpen ? "max-h-[900px] opacity-100" : "max-h-0 opacity-0"}`}>
               <div className={`${cardBg} ${subtle} p-4 rounded-2xl shadow-md mt-2`}>
@@ -549,57 +588,93 @@ export default function VoteWaveDemo() {
             </div>
           </section>
         )}
-
         {/* DASHBOARD */}
         {activeTab === "dashboard" && (
           <section className="space-y-4">
+            {/* Dashboard Header + Filters */}
             <div className={`${cardBg} ${subtle} p-4 rounded-2xl flex justify-between items-center`}>
               <div>
                 <h2 className="text-xl font-bold">Analytics</h2>
                 <div className="text-sm text-gray-400">Overview ({analyticsTimeFilter})</div>
               </div>
-
               <div className="flex items-center gap-2">
-                <select value={analyticsCategory} onChange={(e) => setAnalyticsCategory(e.target.value as any)} className={`p-2 rounded ${cardBg} border ${subtle}`}>
+                <select
+                  value={analyticsCategory}
+                  onChange={(e) => setAnalyticsCategory(e.target.value as any)}
+                  className={`p-2 rounded ${cardBg} border ${subtle}`}
+                >
                   <option value="personal">Personal Contribution</option>
                   <option value="global">Global Trend</option>
                 </select>
-                <select value={analyticsTimeFilter} onChange={(e) => setAnalyticsTimeFilter(e.target.value as any)} className={`p-2 rounded ${cardBg} border ${subtle}`}>
+                <select
+                  value={analyticsTimeFilter}
+                  onChange={(e) => setAnalyticsTimeFilter(e.target.value as any)}
+                  className={`p-2 rounded ${cardBg} border ${subtle}`}
+                >
+                  <option value="1d">1d</option>
                   <option value="7d">7d</option>
                   <option value="30d">30d</option>
                   <option value="90d">90d</option>
+                  <option value="180d">180d</option>
+                  <option value="1y">1y</option>
                 </select>
               </div>
             </div>
 
-            <div className="grid md:grid-cols-3 gap-4">
-              <div className={`${cardBg} ${subtle} p-4 rounded-xl`}>
-                <h3 className="font-semibold">Engagement</h3>
-                <div className="text-sm text-gray-400 mt-2">Total Votes</div>
-                <div className="text-2xl font-bold mt-2">{analyticsCategory === "personal" ? "1,254" : "124,500"}</div>
-                <div className="h-24 bg-gradient-to-r from-indigo-600 to-sky-400 rounded mt-3" />
+            {/* Dashboard Cards */}
+            <div className="grid md:grid-cols-3 gap-6">
+              {/* Voting Trends */}
+              <div className={`${cardBg} ${subtle} p-4 rounded-2xl`}>
+                <h3 className="font-semibold">Vote Trends (Last {analyticsTimeFilter})</h3>
+                <div className="mt-2 h-36 w-full grid grid-cols-6 gap-1">
+                  {Array.from({ length: 6 }).map((_, i) => (
+                    <div
+                      key={i}
+                      className={`h-${Math.floor(Math.random() * 20 + 20)} bg-gradient-to-b from-indigo-500 to-sky-400 rounded`}
+                    />
+                  ))}
+                </div>
+                <div className="text-xs text-gray-400 mt-1">Shows daily vote distribution</div>
               </div>
 
-              <div className={`${cardBg} ${subtle} p-4 rounded-xl`}>
+              {/* Top Polls */}
+              <div className={`${cardBg} ${subtle} p-4 rounded-2xl`}>
                 <h3 className="font-semibold">Top Polls</h3>
                 <ul className="mt-2 space-y-2 text-sm">
-                  <li className="flex justify-between"><span>Should remote work be the new normal?</span><span className="text-gray-400">4.5k</span></li>
-                  <li className="flex justify-between"><span>Free public transport?</span><span className="text-gray-400">3.2k</span></li>
+                  {polls.slice(0, 5).map((p) => (
+                    <li key={p.id} className="flex justify-between">
+                      <span
+                        className="cursor-pointer text-indigo-500 hover:underline"
+                        onClick={() => alert(`Redirect to poll: ${p.id}`)}
+                      >
+                        {p.question}
+                      </span>
+                      <span className="text-gray-400">
+                        {p.counts.reduce((a, b) => a + b, 0)}
+                      </span>
+                    </li>
+                  ))}
                 </ul>
               </div>
 
-              <div className={`${cardBg} ${subtle} p-4 rounded-xl`}>
-                <h3 className="font-semibold">Chats & Mentions</h3>
-                <div className="text-sm text-gray-400 mt-2">Recent</div>
-                <div className="space-y-2 mt-2">
-                  <div className="p-2 rounded bg-gray-700/40">Ava mentioned your poll</div>
-                  <div className="p-2 rounded bg-gray-700/40">Your booth got 12 new members</div>
+              {/* Engagement Metrics */}
+              <div className={`${cardBg} ${subtle} p-4 rounded-2xl`}>
+                <h3 className="font-semibold">Engagement</h3>
+                <div className="text-sm text-gray-400 mt-2">Total Votes</div>
+                <div className="text-2xl font-bold mt-2">
+                  {analyticsCategory === "personal" ? "1,254" : "124,500"}
+                </div>
+                <div className="mt-3 flex gap-2">
+                  <div className="flex-1 h-20 bg-gradient-to-tr from-green-400 to-emerald-600 rounded" />
+                  <div className="flex-1 h-20 bg-gradient-to-tr from-pink-400 to-rose-600 rounded" />
+                </div>
+                <div className="text-xs text-gray-400 mt-1">
+                  Breakdown of upvotes vs downvotes
                 </div>
               </div>
             </div>
           </section>
         )}
-
         {/* VOTEBOOTH */}
         {activeTab === "votebooth" && (
           <section className="space-y-4">
@@ -609,21 +684,59 @@ export default function VoteWaveDemo() {
                 <div className="text-sm text-gray-400">Private group polling spaces with chat & pinned polls</div>
               </div>
               <div className="mt-3 md:mt-0 flex gap-2">
-                <button onClick={() => {
-                  // open a small create booth modal via prompt for demo
-                  const name = prompt("VoteBooth name?");
-                  if (!name) return;
-                  const vis = prompt("Visibility (public / votebuddies / private)", "votebuddies") || "votebuddies";
-                  const st = new Date().toISOString().slice(0,16);
-                  const en = new Date(Date.now() + 1000 * 60 * 60 * 24).toISOString().slice(0,16);
-                  createVoteBooth({ name, visibility: vis, start: st, end: en, poll: null });
-                }} className="bg-indigo-500 px-4 py-2 rounded text-white flex items-center gap-2"><PlusCircle className="w-4 h-4" /> Create VoteBooth</button>
+                <button
+                  onClick={() => setCreateBoothOpen(true)}
+                  className="bg-indigo-500 px-4 py-2 rounded text-white flex items-center gap-2"
+                >
+                  <PlusCircle className="w-4 h-4" /> Create VoteBooth
+                </button>
               </div>
             </div>
 
+            {/* Create Booth Form */}
+            {createBoothOpen && (
+              <div className={`${cardBg} ${subtle} p-4 rounded-xl space-y-3`}>
+                <input
+                  placeholder="VoteBooth Name"
+                  value={boothName}
+                  onChange={(e) => setBoothName(e.target.value)}
+                  className={`w-full p-2 rounded ${cardBg} border ${subtle}`}
+                />
+                <textarea
+                  placeholder="VoteBooth Description"
+                  value={boothDesc}
+                  onChange={(e) => setBoothDesc(e.target.value)}
+                  className={`w-full p-2 rounded ${cardBg} border ${subtle}`}
+                />
+                <input
+                  placeholder="Add Members (search by username)"
+                  value={boothMembers}
+                  onChange={(e) => setBoothMembers(e.target.value)}
+                  className={`w-full p-2 rounded ${cardBg} border ${subtle}`}
+                />
+                <div className="flex gap-2">
+                  <input type="datetime-local" value={boothStart} onChange={(e) => setBoothStart(e.target.value)} className={`flex-1 p-2 rounded ${cardBg} border ${subtle}`} />
+                  <input type="datetime-local" value={boothEnd} onChange={(e) => setBoothEnd(e.target.value)} className={`flex-1 p-2 rounded ${cardBg} border ${subtle}`} />
+                </div>
+                <input
+                  type="file"
+                  onChange={(e) => setBoothCover(e.target.files?.[0] || null)}
+                  className="text-sm"
+                />
+                <button
+                  onClick={submitVoteBooth}
+                  className="bg-green-500 px-4 py-2 rounded text-white"
+                >
+                  Submit VoteBooth
+                </button>
+              </div>
+            )}
+
             {/* list booths */}
             <div className="space-y-3">
-              {voteBooths.length === 0 && <div className="text-gray-400">No VoteBooths yet — create one to get started.</div>}
+              {voteBooths.length === 0 && (
+                <div className="text-gray-400">No VoteBooths yet — create one to get started.</div>
+              )}
               {voteBooths.map((b) => (
                 <div key={b.id} className={`${cardBg} ${subtle} p-4 rounded-xl`}>
                   <div className="flex justify-between items-start">
@@ -635,7 +748,11 @@ export default function VoteWaveDemo() {
                       <div className="text-xs text-gray-400 mt-1">Voting window: {b.start} → {b.end}</div>
                     </div>
                     <div className="flex items-center gap-2">
-                      {b.owner === username && <button onClick={() => deleteBooth(b.id)} className="text-red-500 flex items-center gap-1"><Trash2 className="w-4 h-4" /> Delete</button>}
+                      {b.owner === username && (
+                        <button onClick={() => deleteBooth(b.id)} className="text-red-500 flex items-center gap-1">
+                          <Trash2 className="w-4 h-4" /> Delete
+                        </button>
+                      )}
                       <button onClick={() => setSelectedBooth(b.id)} className="text-sm px-2 py-1 rounded bg-indigo-500 text-white">Open</button>
                     </div>
                   </div>
@@ -678,7 +795,6 @@ export default function VoteWaveDemo() {
             </div>
           </section>
         )}
-
         {/* PROFILE */}
         {activeTab === "profile" && (
           <section className="space-y-4">
