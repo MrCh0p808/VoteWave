@@ -27,13 +27,14 @@ As Per : September-October 2025
 config:
   theme: neo-dark
   layout: dagre
+  look: neo
 ---
 flowchart LR
  subgraph subGraph0["External Systems"]
         User["👤 User"]
   end
- subgraph React_State["React State & Props"]
-        PollForm["📝 CreatePollForm\n- pollQuestion\n- options[] (default: VoteUp, VoteDown, Abstain)\n- startDate, endDate\n- coverImage"]
+ subgraph React_State["React State & Components"]
+        PollForm["📝 CreatePollForm\n- pollQuestion\n- options[] (VoteUp, VoteDown, Abstain)\n- startDate, endDate\n- coverImage"]
         PollFeed["📜 PollFeed\nprops: polls\nstate: selectedPoll, votes"]
         VoteButton["🗳️ VoteButton\nstate: voteState"]
         Session["🔑 Session\n- userSession\n- token"]
@@ -42,92 +43,89 @@ flowchart LR
         FetchPolls["fetchPolls()"]
         CreatePoll["createPoll()"]
         CastVote["castVote()"]
+        GetFeed["getFeed()"]
   end
  subgraph Frontend["Frontend (VoteWaveDemo.tsx)"]
         UI["🌐 Web UI"]
         React_State
         API_Calls
   end
- subgraph subGraph2["Infrastructure & Operations"]
+ subgraph Infra["Infrastructure & Operations"]
         TF["🔧 Terraform\n- var.vpc_cidr\n- var.db_username\n- var.db_password"]
         Docker["🐳 Docker\n- DB_HOST\n- REDIS_HOST\n- S3_BUCKET"]
-  end
- subgraph subGraph3["Public Subnet"]
         ALB["⚖️ Application Load Balancer"]
         API_GW["🚪 API Gateway\nroutes via routeKey, authHeader"]
   end
- subgraph Auth_Service["Auth Service"]
-        Auth_Login_Register["🔐 Authentication & Registration\nvars: userID, token, session"]
-        Auth_Profile["👤 User Profiles\nvars: userID, profileData"]
-        DB_Auth[("📂 User Data DB\nschema: users(id, name, email, hash, created_at)")]
+ subgraph Auth["Auth Service"]
+        Auth_API["🔐 Auth API\n/login, /register, /profile"]
+        DB_Users[("📂 users table\n(id, email, password_hash, created_at)")]
   end
- subgraph Polls_Service["Polls Service"]
-        Polls_Core["📊 Polls Core\nvars: pollID, question, options[], createdAt, expiresAt"]
-        Polls_Expressions["🌊 Expressions (Waves/Ripples)\nvars: waveID, type, pollID"]
-        Polls_Comments["💬 Comments\nvars: commentID, pollID, text, userID"]
-        DB_Polls[("🗄️ Polls Data DB\nschema: polls(id, question, options[], cover_img, created_at)\nvotes(id, poll_id, user_id, option, created_at)\ncomments(id, poll_id, user_id, text, created_at)")]
-        Redis_Cache(("⚡ Redis Cache\nkeys: pollResultsCache, sessionStore"))
+ subgraph Profiles["Profiles & Identity Service"]
+        Profiles_API["👤 Profiles API\nGET /profiles/{id}, PUT /profiles"]
+        DB_Profiles[("🗄️ profiles table\n(user_id, username, bio, profile_pic_url)")]
   end
- subgraph Content_Service["Content Service"]
-        Content_Feed["📰 Personalized Feeds\nvars: feedID, userID, pollRefs[]"]
-        Content_Follows["🔗 Follows & Connections\nvars: followerID, followingID"]
-        Content_Notifications["🔔 Notifications\nvars: notificationID, userID, type"]
-        Content_Media["📷 Media Uploads\nvars: mediaID, mediaURL, pollID"]
-        DB_Content[("📂 User Connections DB\nschema: follows(follower_id, following_id)\nnotifications(id, user_id, type, created_at)")]
-        S3_Bucket[("🪣 S3 Bucket\nfolders: pollCovers/, userUploads/")]
+ subgraph Polls["Polls Service"]
+        Polls_API["📊 Polls API\n/createPoll, /vote, /getPolls"]
+        DB_Polls[("🗄️ polls table\n(id, question, options[], cover_img, created_at)\nvotes table\n(id, poll_id, user_id, option)\ncomments table (ref)")]
+        S3_Polls[("🪣 S3 Bucket\npollCovers/")]
   end
- subgraph subGraph4["VoteWave Microservices"]
-        Auth_Service
-        Polls_Service
-        Content_Service
+ subgraph Follows["Follows & Connections Service"]
+        Follows_API["🔗 Follows API\nPOST/DELETE follows\nGET followers/following"]
+        DB_Follows[("🗄️ follows table\n(follower_id, followed_id)")]
   end
- subgraph subGraph7["AWS Cloud"]
-        VPC["☁️ VPC"]
-        RDS[("🐘 PostgreSQL RDS\nschemas: users, polls, votes, comments, follows, notifications")]
-        S3[("🪣 Global S3 Bucket")]
-        Redis(("⚡ Global Redis Cache"))
+ subgraph Expressions["Expressions Service"]
+        Expr_API["🌊 Expressions API\nPOST /expressions/{item_id}, DELETE /expressions/{item_id}"]
+        DB_Expr[("🗄️ expressions table\n(id, user_id, item_id, type: wave|ripple)")]
   end
-    Auth_Login_Register --> DB_Auth
-    Auth_Profile --> DB_Auth
-    Polls_Core -- Reads/Writes --> DB_Polls
-    Polls_Expressions -- Writes --> DB_Polls
-    Polls_Comments -- Writes --> DB_Polls
-    Polls_Core -- Caches --> Redis_Cache
-    Content_Follows --> DB_Content
-    Content_Notifications --> DB_Content
-    Content_Media -- Uploads --> S3_Bucket
-    API_GW -- Authenticates & Routes --> Auth_Service
-    API_GW -- Routes --> Polls_Service & Content_Service
-    Auth_Service --> RDS
-    Polls_Service --> RDS
-    Content_Service --> RDS
-    Content_Service -- Reads/Writes --> S3_Bucket
-    Polls_Service -- Caches --> Redis_Cache
+ subgraph Comments["Comments Service"]
+        Comments_API["💬 Comments API\nPOST/GET/DELETE comments"]
+        DB_Comments[("🗄️ comments table\n(id, user_id, item_id, text, created_at)")]
+  end
+ subgraph Feed["Feed & Discovery Service"]
+        Feed_API["📰 Feed API\nGET /feed, /search, /explore/trending"]
+        Search_Engine["🔍 Search Engine\n(Postgres FTS / Elasticsearch)"]
+  end
+ subgraph Notifs["Notifications Service"]
+        Notif_API["🔔 Notifications API\nGET /notifications, POST /mark-read"]
+        DB_Notifs[("🗄️ notifications table\n(id, recipient_id, sender_id, type, content_id, is_read)")]
+  end
+ subgraph Services["VoteWave Microservices"]
+        Auth
+        Profiles
+        Polls
+        Follows
+        Expressions
+        Comments
+        Feed
+        Notifs
+  end
+ subgraph Shared["AWS Cloud Resources"]
+        RDS[("🐘 PostgreSQL RDS\nschemas: users, profiles, polls, votes, follows, expressions, comments, notifications")]
+        Redis[("⚡ Redis Cache\npollResultsCache, sessionStore")]
+        S3[("🪣 S3 Buckets\npollCovers/, userUploads/")]
+  end
     User -- Requests --> UI
     UI -- API Calls --> ALB
-    ALB -- Routes Traffic --> API_GW
-    TF -- Provisions Infrastructure --> subGraph7
-    Docker -- Manages Containers --> Auth_Service & Polls_Service & Content_Service
-    classDef service fill:#505050,stroke:#A0A0A0,color:#FFFFFF
-    classDef db fill:#303030,stroke:#808080,color:#FFFFFF
-    classDef cache fill:#303030,stroke:#808080,color:#FFFFFF
-    classDef frontend fill:#303030,stroke:#808080,color:#FFFFFF
-    classDef ops fill:#303030,stroke:#808080,color:#FFFFFF
-    classDef infra fill:#303030,stroke:#808080,color:#FFFFFF
-    style subGraph7 fill:#424242,stroke:#A0A0A0
-    style subGraph0 fill:#424242,stroke:#A0A0A0
-    style Frontend fill:#424242,stroke:#A0A0A0,color:#FFFFFF
-    style subGraph2 fill:#424242,stroke:#A0A0A0
-    style subGraph3 fill:#424242,stroke:#A0A0A0
-    style subGraph4 fill:#424242,stroke:#808080,stroke-width:2px
-
+    ALB -- Routes --> API_GW
+    API_GW --> Auth & Profiles & Polls & Follows & Expressions & Comments & Feed & Notifs
+    Auth --> DB_Users
+    Profiles --> DB_Profiles
+    Polls --> DB_Polls & S3_Polls
+    Follows --> DB_Follows
+    Expressions --> DB_Expr
+    Comments --> DB_Comments
+    Feed --> Search_Engine
+    Notifs --> DB_Notifs
+    Services --> RDS & Redis & S3
+    TF -- Provisions --> Shared
+    Docker -- Manages --> Services
 ```
 ---
 ## End-To-End Request Life-Cycle
 ```mermaid
 ---
 config:
-  theme: mc
+  theme: neo-dark
 ---
 sequenceDiagram
     autonumber
@@ -136,55 +134,113 @@ sequenceDiagram
     participant ALB as ⚖️ ALB
     participant APIGW as 🚪 API Gateway
     participant AUTH as 🔐 Auth Service
+    participant PROFILES as 👤 Profiles Service
     participant POLLS as 📊 Polls Service
-    participant CONTENT as 📰 Content Service
+    participant FOLLOWS as 🔗 Follows Service
+    participant EXPR as 🌊 Expressions Service
+    participant COMMENTS as 💬 Comments Service
+    participant FEED as 📰 Feed Service
+    participant NOTIFS as 🔔 Notifications Service
     participant RDS as 🐘 RDS (Postgres)
     participant REDIS as ⚡ Redis Cache
     participant S3 as 🪣 S3 Bucket
+    participant SEARCH as 🔍 Search Engine
 
-    %% === User Authentication Flow ===
-    U->>UI: Login/Register (form data)
-    UI->>ALB: HTTP Request
-    ALB->>APIGW: Forward Request
+    %% === Authentication ===
+    U->>UI: Submit login/register form
+    UI->>ALB: HTTP request
+    ALB->>APIGW: Forward request
     APIGW->>AUTH: /login or /register
-    AUTH->>RDS: Validate user / create record
-    RDS-->>AUTH: Success (userID, token)
-    AUTH-->>APIGW: Auth token
-    APIGW-->>UI: Token returned
-    UI->>U: Logged in (session stored)
+    AUTH->>RDS: Verify or insert user
+    RDS-->>AUTH: userID, token
+    AUTH-->>APIGW: token returned
+    APIGW-->>UI: Auth success
+    UI->>U: Session stored
 
-    %% === Poll Creation Flow ===
-    U->>UI: Create Poll (question, options[], coverImage, duration)
-    UI->>ALB: API call (createPoll)
-    ALB->>APIGW: Forward Request
+    %% === Profile Management ===
+    U->>UI: Update profile (bio, pic)
+    UI->>ALB: API call
+    ALB->>APIGW: Forward request
+    APIGW->>PROFILES: /profiles
+    PROFILES->>RDS: Update profiles table
+    PROFILES-->>APIGW: Success
+    APIGW-->>UI: Profile updated
+    UI->>U: Profile refreshed
+
+    %% === Poll Creation ===
+    U->>UI: Create poll (question, options, cover)
+    UI->>ALB: API call
+    ALB->>APIGW: Forward request
     APIGW->>POLLS: /createPoll
-    POLLS->>RDS: Insert poll record
-    POLLS->>S3: Upload cover image
-    POLLS-->>APIGW: PollID returned
-    APIGW-->>UI: Poll created confirmation
-    UI->>U: Poll visible in feed
+    POLLS->>RDS: Insert into polls table
+    POLLS->>S3: Upload poll cover
+    POLLS-->>APIGW: pollID returned
+    APIGW-->>UI: Poll created
+    UI->>U: Poll visible
 
-    %% === Voting Flow ===
-    U->>UI: Cast Vote (pollID, option)
-    UI->>ALB: API call (castVote)
-    ALB->>APIGW: Forward Request
+    %% === Voting ===
+    U->>UI: Cast vote (pollID, option)
+    UI->>ALB: API call
+    ALB->>APIGW: Forward request
     APIGW->>POLLS: /vote
-    POLLS->>RDS: Insert vote
+    POLLS->>RDS: Insert into votes table
     POLLS->>REDIS: Update pollResultsCache
     POLLS-->>APIGW: Vote success
-    APIGW-->>UI: Updated vote count
-    UI->>U: Shows updated results
+    APIGW-->>UI: Updated results
+    UI->>U: Vote shown
 
-    %% === Feed & Notifications ===
-    U->>UI: Open Feed
-    UI->>ALB: API call (fetchFeed)
-    ALB->>APIGW: Forward Request
-    APIGW->>CONTENT: /feed
-    CONTENT->>RDS: Query followed polls + notifications
-    CONTENT->>S3: Fetch media URLs
-    CONTENT-->>APIGW: Feed data
-    APIGW-->>UI: Feed with polls & media
-    UI->>U: Personalized feed shown
+    %% === Expressions (Waves/Ripples) ===
+    U->>UI: Add expression (wave/ripple)
+    UI->>ALB: API call
+    ALB->>APIGW: Forward request
+    APIGW->>EXPR: /expressions/{item_id}
+    EXPR->>RDS: Insert into expressions table
+    EXPR-->>APIGW: Expression saved
+    APIGW-->>UI: UI updated
+    UI->>U: Expression visible
+
+    %% === Comments ===
+    U->>UI: Post comment
+    UI->>ALB: API call
+    ALB->>APIGW: Forward request
+    APIGW->>COMMENTS: /comments/{item_id}
+    COMMENTS->>RDS: Insert into comments table
+    COMMENTS-->>APIGW: Comment saved
+    APIGW-->>UI: Comment displayed
+    UI->>U: Comment visible
+
+    %% === Follows ===
+    U->>UI: Follow another user
+    UI->>ALB: API call
+    ALB->>APIGW: Forward request
+    APIGW->>FOLLOWS: /follows/{id}
+    FOLLOWS->>RDS: Insert into follows table
+    FOLLOWS-->>APIGW: Success
+    APIGW-->>UI: Follow confirmed
+    UI->>U: Updated feed connections
+
+    %% === Feed & Search ===
+    U->>UI: Open feed
+    UI->>ALB: API call
+    ALB->>APIGW: Forward request
+    APIGW->>FEED: /feed
+    FEED->>RDS: Query polls, follows, expressions
+    FEED->>SEARCH: Run text/hashtag search
+    FEED->>S3: Retrieve media
+    FEED-->>APIGW: Feed data
+    APIGW-->>UI: Feed delivered
+    UI->>U: Personalized feed
+
+    %% === Notifications ===
+    NOTIFS->>RDS: Insert notification (wave, comment, follow, poll update)
+    U->>UI: Check notifications
+    UI->>ALB: API call
+    ALB->>APIGW: Forward request
+    APIGW->>NOTIFS: /notifications
+    NOTIFS->>RDS: Fetch notifications
+    NOTIFS-->>APIGW: Notifications list
+    APIGW-->>UI: Notifications delivered
+    UI->>U: User sees notifications
 
 ```
 ---
@@ -225,169 +281,114 @@ Ensure your local machine has Terraform installed (terraform -v).
 
 Follow [SETUP.md](SETUP.md) for detailed deployment instructions.
 
-# VoteWave Microservices Plan
-This document outlines the detailed architecture and requirements for new microservices to expand VoteWave into a complete social media platform. It defines the responsibilities of each service, their API endpoints, and their respective database schemas.
-
-## 1. Profiles & Identity Service
-This service will handle all user-facing identity information beyond basic authentication.
-**Purpose:** To manage and serve public user profiles, including a user's bio, profile picture link, and other public-facing data.
-
-### API Endpoints:
+## MicroServices At Glance
+```mermaid
+---
+config:
+  theme: neo-dark
+  layout: elk
+---
+flowchart LR
+ subgraph Auth["🔐 Authentication Service"]
+        AuthDesc["Purpose: Authenticate users, register, issue tokens"]
+        AuthAPI["API Endpoints:\nPOST /auth/register\nPOST /auth/login\nGET /auth/profile"]
+        AuthDB["DB Schema:\nusers(id, email, password_hash, created_at)"]
+  end
+ subgraph Profiles["👤 Profiles & Identity Service"]
+        ProfDesc["Purpose: Manage public profiles (bio, pic)"]
+        ProfAPI["API Endpoints:\nGET /profiles/{id}\nPUT /profiles"]
+        ProfDB["DB Schema:\nprofiles(user_id, username, bio, profile_pic_url)"]
+  end
+ subgraph Polls["📊 Polls Service"]
+        PollsDesc["Purpose: Create polls, votes, cache results"]
+        PollsAPI["API Endpoints:\nPOST /polls/create\nPOST /polls/vote\nGET /polls/{id}"]
+        PollsDB["DB Schema:\npolls(id, question, options[], cover_img_url)\nvotes(id, poll_id, user_id, option_index)"]
+  end
+ subgraph Follows["🔗 Follows Service"]
+        FollowsDesc["Purpose: Manage follow relationships"]
+        FollowsAPI["API Endpoints:\nPOST /follows/{id}\nDELETE /follows/{id}\nGET /followers/{id}\nGET /following/{id}"]
+        FollowsDB["DB Schema:\nfollows(follower_id, followed_id, created_at)"]
+  end
+ subgraph Expressions["🌊 Expressions Service"]
+        ExprDesc["Purpose: Manage Waves (strong) & Ripples (soft)"]
+        ExprAPI["API Endpoints:\nPOST /expressions/{item_id}\nDELETE /expressions/{item_id}"]
+        ExprDB["DB Schema:\nexpressions(id, user_id, item_id, type: wave|ripple, created_at)"]
+  end
+ subgraph Comments["💬 Comments Service"]
+        CommDesc["Purpose: Threaded discussions under polls"]
+        CommAPI["API Endpoints:\nPOST /comments/{item_id}\nGET /comments/{item_id}\nDELETE /comments/{comment_id}"]
+        CommDB["DB Schema:\ncomments(id, user_id, item_id, text, created_at)"]
+  end
+ subgraph Feed["📰 Feed & Discovery Service"]
+        FeedDesc["Purpose: Personalized feeds, search, trending"]
+        FeedAPI["API Endpoints:\nGET /feed\nGET /search\nGET /explore/trending"]
+        FeedLogic["Business Logic:\nCombine follows, engagement, trends\nUse Postgres FTS/Elasticsearch"]
+  end
+ subgraph Notifs["🔔 Notifications Service"]
+        NotifDesc["Purpose: Real-time user notifications"]
+        NotifAPI["API Endpoints:\nGET /notifications\nPOST /notifications/mark-read"]
+        NotifDB["DB Schema:\nnotifications(id, recipient_id, sender_id, type, content_id, is_read, created_at)"]
+  end
+ subgraph Infra["☁️ Shared Infrastructure"]
+        RDS["🐘 PostgreSQL RDS:\nusers, profiles, polls, follows, expressions, comments, notifications"]
+        Redis["⚡ Redis:\npollResultsCache, sessionStore"]
+        S3["🪣 S3:\npollCovers/, userUploads/"]
+        Tools["Terraform: provision infra\nDocker: containerize services\nALB+API GW: route requests"]
+  end
+ subgraph ARCH["📖 VoteWave Microservices Architecture"]
+    direction TB
+        Auth
+        Profiles
+        Polls
+        Follows
+        Expressions
+        Comments
+        Feed
+        Notifs
+        Infra
+  end
+ subgraph Login["1️⃣ User Login"]
+        L1["User -> UI: enter credentials"]
+        L2["UI -> API Gateway -> Auth Service"]
+        L3["Auth -> RDS: verify user"]
+        L4["Auth -> UI: return JWT token"]
+  end
+ subgraph CreatePoll["2️⃣ Create Poll"]
+        CP1["User -> UI: fill form"]
+        CP2["UI -> API Gateway -> Polls Service"]
+        CP3["Polls -> RDS: insert poll"]
+        CP4["Polls -> S3: upload cover image"]
+        CP5["Polls -> UI: poll_id returned"]
+  end
+ subgraph Vote["3️⃣ Cast Vote"]
+        V1["User -> UI: vote"]
+        V2["UI -> API Gateway -> Polls Service"]
+        V3["Polls -> RDS: insert vote"]
+        V4["Polls -> Redis: update pollResultsCache"]
+        V5["Polls -> UI: success response"]
+  end
+ subgraph Expression["4️⃣ Wave/Ripple"]
+        E1["User -> UI: send Wave/Ripple"]
+        E2["UI -> API Gateway -> Expressions Service"]
+        E3["Expressions -> RDS: insert wave/ripple"]
+        E4["Expressions -> UI: updated UI"]
+  end
+ subgraph Notify["5️⃣ Notifications"]
+        N1["Event: poll/vote/comment/follow"]
+        N2["Service -> Notifications -> RDS: insert notification"]
+        N3["User -> UI: GET /notifications"]
+        N4["Notifications -> RDS: fetch list"]
+        N5["UI: display notifications"]
+  end
+ subgraph LIFECYCLES["🔄 Request Lifecycle Examples"]
+    direction TB
+        Login
+        CreatePoll
+        Vote
+        Expression
+        Notify
+  end
 ```
-GET /api/v1/profiles/{user_id}: Retrieve the public profile of a specific user.
-```
-**Path Parameter:** user_id (string, required).
-
-**Response:** A JSON object containing user_id, username, bio, profile_pic_url, etc.
-```
-PUT /api/v1/profiles: Update the authenticated user's profile.
-```
-**Request Body**: JSON object with fields like bio (string) and profile_pic_url (string).
-
-### Database Schema (PostgreSQL):
-```
-CREATE TABLE IF NOT EXISTS profiles (
-    user_id UUID PRIMARY KEY REFERENCES users(id),
-    username VARCHAR(80) UNIQUE NOT NULL,
-    bio TEXT,
-    profile_pic_url VARCHAR(255),
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-);
-```
-**Dependencies:** auth-service (for user_id and authentication).
-
-## 2. Follows & Connections Service
-This service will manage the one-way following relationships between users.
-
-**Purpose:** To track and manage who a user is following and who is following them, providing the foundation for a personalized feed.
-
-### API Endpoints:
-```
-POST /api/v1/follows/{followed_id}: Authenticated user follows another user.
-```
-**Path Parameter:** followed_id (string, required).
-**Response:** 201 Created on success.
-```
-DELETE /api/v1/follows/{followed_id}: Authenticated user unfollows another user.
-```
-**Path Parameter:** followed_id (string, required).
-**Response:** 204 No Content on success.
-```
-GET /api/v1/follows/followers/{user_id}: Get a list of users following a given user.
-```
-```
-GET /api/v1/follows/following/{user_id}: Get a list of users a given user is following.
-```
-### Database Schema (PostgreSQL):
-```
-CREATE TABLE IF NOT EXISTS follows (
-    follower_id UUID REFERENCES users(id),
-    followed_id UUID REFERENCES users(id),
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (follower_id, followed_id)
-);
-```
-**Dependencies**: auth-service.
-
-## 3. The Expression Service (Psychological Engagement)
-To create an addictive experience, we will replace traditional "likes" with a system based on "Waves" and "Ripples." . A Wave is a powerful, active endorsement of a poll, indicating strong agreement or approval. A Ripple is a softer, passive form of engagement, showing a poll has caught a user's attention without them taking a decisive action.
-
-**Purpose:** To handle all user-generated expressions of feedback on polls and content.
-
-### API Endpoints:
-```
-POST /api/v1/expressions/{item_id}: An authenticated user creates an expression on a poll or piece of content.
-```
-**Path Parameter:** item_id (string, required, can be a poll_id or content_id).
-**Request Body:** JSON object with expression_type ("wave" or "ripple").
-**Response**: 201 Created on success.
-```
-DELETE /api/v1/expressions/{item_id}: Remove a user's expression.
-```
-### Database Schema (PostgreSQL):
-```
-CREATE TABLE IF NOT EXISTS expressions (
-    id SERIAL PRIMARY KEY,
-    user_id UUID REFERENCES users(id),
-    item_id UUID, -- References poll_id or content_id
-    expression_type VARCHAR(10) NOT NULL CHECK (expression_type IN ('wave', 'ripple')),
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-);
-```
-**Dependencies:** auth-service, polls-service, content-service.
-
-## 4. Comments Service
-This service will manage all user comments on polls and content.
-**Purpose:** To enable threaded discussions and user-to-user communication.
-
-### API Endpoints:
-```
-POST /api/v1/comments/{item_id}: Post a new comment on a poll or content.
-```
-**Request Body:** JSON object with comment_text (string).
-```
-GET /api/v1/comments/{item_id}: Retrieve all comments for a specific poll or content item.
-DELETE /api/v1/comments/{comment_id}: Delete a comment (by the author or poll owner).
-```
-
-Database Schema (PostgreSQL):
-```
-CREATE TABLE IF NOT EXISTS comments (
-    id UUID PRIMARY KEY,
-    user_id UUID REFERENCES users(id),
-    item_id UUID NOT NULL, -- References poll_id or content_id
-    comment_text TEXT NOT NULL,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-);
-```
-**Dependencies:** auth-service, polls-service, content-service.
-
-## 5. Feed & Discovery Service
-This service is the heart of the social media experience, handling personalized content delivery and search.
-**Purpose:** To generate a user's personalized feed, provide search functionality, and manage trends.
-
-### API Endpoints:
-```
-GET /api/v1/feed: Retrieve the authenticated user's personalized feed.
-```
-Query Parameters: page (integer), limit (integer).
-```
-GET /api/v1/search: Search for users, polls, or hashtags.
-```
-Query Parameters: q (string, required), type (e.g., "users", "polls").
-```
-GET /api/v1/explore/trending: Get a list of currently trending polls.
-```
-### Business Logic:
-
-**Feed Generation:** The logic will involve a combination of content from followed users, popular content from the broader network, and content based on the user's past engagement (polls they've interacted with).
-**Search Indexing:** The service will need to use a search-optimized database (like Elasticsearch) or a full-text search engine within PostgreSQL to handle efficient searches.
-**Dependencies**: auth-service, polls-service, content-service, follows-service.
-
-## 6. Notifications Service
-This service will manage all user notifications.
-**Purpose**: To send real-time and push notifications to users about relevant events.
-
-### **API Endpoints:**
-```
-GET /api/v1/notifications: Retrieve the authenticated user's notifications.
-
-POST /api/v1/notifications/mark-read: Mark specific or all notifications as read.
-```
-### Database Schema (PostgreSQL):
-```
-CREATE TABLE IF NOT EXISTS notifications (
-    id UUID PRIMARY KEY,
-    recipient_user_id UUID REFERENCES users(id),
-    sender_user_id UUID REFERENCES users(id),
-    notification_type VARCHAR(50) NOT NULL, -- e.g., 'new_follower', 'wave_on_poll', 'comment_on_poll'
-    content_id UUID, -- The item the notification is about (poll_id, comment_id, etc.)
-    is_read BOOLEAN DEFAULT FALSE,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-);
-```
-
 ## 🤝 Contributing
 
 - Got ideas or improvements?
@@ -402,6 +403,7 @@ This project is open-source under the [MIT LICENSE](LICENSE)
 .
 
 ## 🔖 Tags
+
 
 
 
