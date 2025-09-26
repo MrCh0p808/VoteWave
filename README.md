@@ -27,129 +27,101 @@ This repo automates the **entire infrastructure lifecycle**, from networking and
 ```mermaid
 ---
 config:
-  theme: mc
+  theme: neo-dark
+  layout: dagre
 ---
 flowchart LR
-  subgraph subGraph0["External Systems"]
-    User["👤 User"]
+ subgraph subGraph0["External Systems"]
+        User["👤 User"]
   end
-  subgraph Frontend["Frontend"]
-    UI["Web UI"]
+ subgraph React_State["React State & Props"]
+        PollForm["📝 CreatePollForm\n- pollQuestion\n- options[] (default: VoteUp, VoteDown, Abstain)\n- startDate, endDate\n- coverImage"]
+        PollFeed["📜 PollFeed\nprops: polls\nstate: selectedPoll, votes"]
+        VoteButton["🗳️ VoteButton\nstate: voteState"]
+        Session["🔑 Session\n- userSession\n- token"]
   end
-  subgraph subGraph2["Infrastructure & Operations"]
-    direction LR
-    TF("🔧 Terraform")
-    Docker("🔧 Docker")
+ subgraph API_Calls["Frontend API Calls"]
+        FetchPolls["fetchPolls()"]
+        CreatePoll["createPoll()"]
+        CastVote["castVote()"]
   end
-  subgraph subGraph3["Public Subnet"]
-    ALB("Application Load Balancer")
-    API_GW("API Gateway")
+ subgraph Frontend["Frontend (VoteWaveDemo.tsx)"]
+        UI["🌐 Web UI"]
+        React_State
+        API_Calls
   end
-  subgraph Auth_Service["Auth Service"]
-    Auth_Login_Register("Authentication & Registration")
-    Auth_Profile("User Profiles")
-    DB_Auth[("User Data DB")]
+ subgraph subGraph2["Infrastructure & Operations"]
+        TF["🔧 Terraform\n- var.vpc_cidr\n- var.db_username\n- var.db_password"]
+        Docker["🐳 Docker\n- DB_HOST\n- REDIS_HOST\n- S3_BUCKET"]
   end
-  subgraph Polls_Service["Polls Service"]
-    Polls_Core("Polls Core")
-    Polls_Expressions("Expressions (Waves/Ripples)")
-    Polls_Comments("Comments")
-    DB_Polls[("Polls Data DB")]
-    Redis_Cache(("Redis Cache"))
+ subgraph subGraph3["Public Subnet"]
+        ALB["⚖️ Application Load Balancer"]
+        API_GW["🚪 API Gateway\nroutes via routeKey, authHeader"]
   end
-  subgraph Content_Service["Content Service"]
-    Content_Feed("Personalized Feeds & Discovery")
-    Content_Follows("Follows & Connections")
-    Content_Notifications("Notifications")
-    Content_Media("Media Uploads")
-    DB_Content[("User Connections DB")]
-    S3_Bucket[("S3 Bucket")]
+ subgraph Auth_Service["Auth Service"]
+        Auth_Login_Register["🔐 Authentication & Registration\nvars: userID, token, session"]
+        Auth_Profile["👤 User Profiles\nvars: userID, profileData"]
+        DB_Auth[("📂 User Data DB\nschema: users(id, name, email, hash, created_at)")]
   end
-  subgraph subGraph4["VoteWave Microservices"]
-    Auth_Service
-    Polls_Service
-    Content_Service
+ subgraph Polls_Service["Polls Service"]
+        Polls_Core["📊 Polls Core\nvars: pollID, question, options[], createdAt, expiresAt"]
+        Polls_Expressions["🌊 Expressions (Waves/Ripples)\nvars: waveID, type, pollID"]
+        Polls_Comments["💬 Comments\nvars: commentID, pollID, text, userID"]
+        DB_Polls[("🗄️ Polls Data DB\nschema: polls(id, question, options[], cover_img, created_at)\nvotes(id, poll_id, user_id, option, created_at)\ncomments(id, poll_id, user_id, text, created_at)")]
+        Redis_Cache(("⚡ Redis Cache\nkeys: pollResultsCache, sessionStore"))
   end
-  subgraph VPC["VPC"]
-    subGraph3
-    subGraph4
+ subgraph Content_Service["Content Service"]
+        Content_Feed["📰 Personalized Feeds\nvars: feedID, userID, pollRefs[]"]
+        Content_Follows["🔗 Follows & Connections\nvars: followerID, followingID"]
+        Content_Notifications["🔔 Notifications\nvars: notificationID, userID, type"]
+        Content_Media["📷 Media Uploads\nvars: mediaID, mediaURL, pollID"]
+        DB_Content[("📂 User Connections DB\nschema: follows(follower_id, following_id)\nnotifications(id, user_id, type, created_at)")]
+        S3_Bucket[("🪣 S3 Bucket\nfolders: pollCovers/, userUploads/")]
   end
-  subgraph subGraph7["AWS Cloud"]
-    VPC
-    RDS[("PostgreSQL RDS")]
-    S3[("S3 Bucket")]
-    Redis(("Redis Cache"))
+ subgraph subGraph4["VoteWave Microservices"]
+        Auth_Service
+        Polls_Service
+        Content_Service
   end
-  Auth_Login_Register --> DB_Auth
-  Auth_Profile --> DB_Auth
-  Polls_Core -- Reads/Writes --> DB_Polls
-  Polls_Expressions -- Writes --> DB_Polls
-  Polls_Comments -- Writes --> DB_Polls
-  Polls_Core -- Caches --> Redis_Cache
-  Content_Follows --> DB_Content
-  Content_Notifications --> DB_Content
-  Content_Media -- Uploads --> S3_Bucket
-  API_GW -- Authenticates & Routes --> Auth_Service
-  API_GW -- Routes --> Polls_Service & Content_Service
-  Auth_Service --> RDS
-  Polls_Service --> RDS
-  Content_Service --> RDS
-  Content_Service -- Reads/Writes --> S3_Bucket
-  Polls_Service -- Caches --> Redis_Cache
-  User -- Requests --> UI
-  UI -- API Calls --> ALB
-  ALB -- Routes Traffic --> API_GW
-  TF -- Provisions Infrastructure --> subGraph7
-  Docker -- Manages Containers --> Auth_Service & Polls_Service & Content_Service
-  classDef user fill:#404040,stroke:#808080
-  classDef frontend fill:#404040,stroke:#808080
-  classDef gateway fill:#404040,stroke:#808080
-  classDef backend fill:#404040,stroke:#808080
-  classDef db fill:#404040,stroke:#808080
-  classDef storage fill:#404040,stroke:#808080
-  classDef cache fill:#404040,stroke:#808080
-  classDef ops fill:#404040,stroke:#808080
-  classDef application fill:#f0f8ff,stroke:#000
-  style User color:#FFFFFF
-  style UI color:#FFFFFF
-  style TF color:#FFFFFF
-  style Docker color:#FFFFFF
-  style ALB color:#FFFFFF
-  style API_GW color:#FFFFFF
-  style RDS color:#FFFFFF
-  style S3 color:#FFFFFF
-  style Redis color:#FFFFFF
-  style subGraph4 fill:#303030,stroke:#808080,stroke-width:2px
-  style Auth_Service fill:#505050,stroke:#A0A0A0
-  style Polls_Service fill:#505050,stroke:#A0A0A0
-  style Content_Service fill:#505050,stroke:#A0A0A0
-  style subGraph0 fill:#505050,stroke:#A0A0A0
-  style Frontend fill:#505050,stroke:#A0A0A0
-  style subGraph2 fill:#505050,stroke:#A0A0A0
-  style subGraph3 fill:#505050,stroke:#A0A0A0
-  style VPC fill:#505050,stroke:#A0A0A0
-  style subGraph7 fill:#505050,stroke:#A0A0A0
-  linkStyle 0 stroke:#FFFFFF,stroke-width:2px,fill:none
-  linkStyle 1 stroke:#FFFFFF,stroke-width:2px,fill:none
-  linkStyle 2 stroke:#FFFFFF,stroke-width:2px,fill:none
-  linkStyle 3 stroke:#FFFFFF,stroke-width:2px,fill:none
-  linkStyle 4 stroke:#FFFFFF,stroke-width:2px,fill:none
-  linkStyle 5 stroke:#FFFFFF,stroke-width:2px,fill:none
-  linkStyle 6 stroke:#FFFFFF,stroke-width:2px,fill:none
-  linkStyle 7 stroke:#FFFFFF,stroke-width:2px,fill:none
-  linkStyle 8 stroke:#FFFFFF,stroke-width:2px,fill:none
-  linkStyle 9 stroke:#FFFFFF,stroke-width:2px,fill:none
-  linkStyle 10 stroke:#FFFFFF,stroke-width:2px,fill:none
-  linkStyle 11 stroke:#FFFFFF,stroke-width:2px,fill:none
-  linkStyle 12 stroke:#FFFFFF,stroke-width:2px,fill:none
-  linkStyle 13 stroke:#FFFFFF,stroke-width:2px,fill:none
-  linkStyle 14 stroke:#FFFFFF,stroke-width:2px,fill:none
-  linkStyle 15 stroke:#FFFFFF,stroke-width:2px,fill:none
-  linkStyle 16 stroke:#FFFFFF,stroke-width:2px,fill:none
-  linkStyle 17 stroke:#FFFFFF,stroke-width:2px,fill:none
-  linkStyle 18 stroke:#FFFFFF,stroke-width:2px,fill:none
-  linkStyle 19 stroke:#FFFFFF,stroke-width:2px,fill:none
-  linkStyle 20 stroke:#FFFFFF,stroke-width:2px,fill:none
+ subgraph subGraph7["AWS Cloud"]
+        VPC["☁️ VPC"]
+        RDS[("🐘 PostgreSQL RDS\nschemas: users, polls, votes, comments, follows, notifications")]
+        S3[("🪣 Global S3 Bucket")]
+        Redis(("⚡ Global Redis Cache"))
+  end
+    Auth_Login_Register --> DB_Auth
+    Auth_Profile --> DB_Auth
+    Polls_Core -- Reads/Writes --> DB_Polls
+    Polls_Expressions -- Writes --> DB_Polls
+    Polls_Comments -- Writes --> DB_Polls
+    Polls_Core -- Caches --> Redis_Cache
+    Content_Follows --> DB_Content
+    Content_Notifications --> DB_Content
+    Content_Media -- Uploads --> S3_Bucket
+    API_GW -- Authenticates & Routes --> Auth_Service
+    API_GW -- Routes --> Polls_Service & Content_Service
+    Auth_Service --> RDS
+    Polls_Service --> RDS
+    Content_Service --> RDS
+    Content_Service -- Reads/Writes --> S3_Bucket
+    Polls_Service -- Caches --> Redis_Cache
+    User -- Requests --> UI
+    UI -- API Calls --> ALB
+    ALB -- Routes Traffic --> API_GW
+    TF -- Provisions Infrastructure --> subGraph7
+    Docker -- Manages Containers --> Auth_Service & Polls_Service & Content_Service
+    classDef service fill:#505050,stroke:#A0A0A0,color:#FFFFFF
+    classDef db fill:#303030,stroke:#808080,color:#FFFFFF
+    classDef cache fill:#303030,stroke:#808080,color:#FFFFFF
+    classDef frontend fill:#303030,stroke:#808080,color:#FFFFFF
+    classDef ops fill:#303030,stroke:#808080,color:#FFFFFF
+    classDef infra fill:#303030,stroke:#808080,color:#FFFFFF
+    style subGraph7 fill:#424242,stroke:#A0A0A0
+    style subGraph0 fill:#424242,stroke:#A0A0A0
+    style Frontend fill:#424242,stroke:#A0A0A0,color:#FFFFFF
+    style subGraph2 fill:#424242,stroke:#A0A0A0
+    style subGraph3 fill:#424242,stroke:#A0A0A0
+    style subGraph4 fill:#424242,stroke:#808080,stroke-width:2px
 
 ```
 ---
@@ -368,6 +340,7 @@ This project is open-source under the [MIT LICENSE](LICENSE)
 .
 
 ## 🔖 Tags
+
 
 
 
