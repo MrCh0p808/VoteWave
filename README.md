@@ -20,9 +20,7 @@ This repo automates the **entire infrastructure lifecycle**, from networking and
 
 ---
 ## Architechture
-#Terraform #AWS #InfrastructureAsCode #CloudNative #VotingApp
-
-# Sprint Plan ( September-October 2025 )
+As Per : September-October 2025
 
 ```mermaid
 ---
@@ -125,7 +123,71 @@ flowchart LR
 
 ```
 ---
+## End-To-End Request Life-Cycle
+```mermaid
+---
+config:
+  theme: mc
+---
+sequenceDiagram
+    autonumber
+    participant U as 👤 User
+    participant UI as 🌐 Web UI (React)
+    participant ALB as ⚖️ ALB
+    participant APIGW as 🚪 API Gateway
+    participant AUTH as 🔐 Auth Service
+    participant POLLS as 📊 Polls Service
+    participant CONTENT as 📰 Content Service
+    participant RDS as 🐘 RDS (Postgres)
+    participant REDIS as ⚡ Redis Cache
+    participant S3 as 🪣 S3 Bucket
 
+    %% === User Authentication Flow ===
+    U->>UI: Login/Register (form data)
+    UI->>ALB: HTTP Request
+    ALB->>APIGW: Forward Request
+    APIGW->>AUTH: /login or /register
+    AUTH->>RDS: Validate user / create record
+    RDS-->>AUTH: Success (userID, token)
+    AUTH-->>APIGW: Auth token
+    APIGW-->>UI: Token returned
+    UI->>U: Logged in (session stored)
+
+    %% === Poll Creation Flow ===
+    U->>UI: Create Poll (question, options[], coverImage, duration)
+    UI->>ALB: API call (createPoll)
+    ALB->>APIGW: Forward Request
+    APIGW->>POLLS: /createPoll
+    POLLS->>RDS: Insert poll record
+    POLLS->>S3: Upload cover image
+    POLLS-->>APIGW: PollID returned
+    APIGW-->>UI: Poll created confirmation
+    UI->>U: Poll visible in feed
+
+    %% === Voting Flow ===
+    U->>UI: Cast Vote (pollID, option)
+    UI->>ALB: API call (castVote)
+    ALB->>APIGW: Forward Request
+    APIGW->>POLLS: /vote
+    POLLS->>RDS: Insert vote
+    POLLS->>REDIS: Update pollResultsCache
+    POLLS-->>APIGW: Vote success
+    APIGW-->>UI: Updated vote count
+    UI->>U: Shows updated results
+
+    %% === Feed & Notifications ===
+    U->>UI: Open Feed
+    UI->>ALB: API call (fetchFeed)
+    ALB->>APIGW: Forward Request
+    APIGW->>CONTENT: /feed
+    CONTENT->>RDS: Query followed polls + notifications
+    CONTENT->>S3: Fetch media URLs
+    CONTENT-->>APIGW: Feed data
+    APIGW-->>UI: Feed with polls & media
+    UI->>U: Personalized feed shown
+
+```
+---
 ## 🚀 Quickstart
 
 Make sure you have [Terraform](https://www.terraform.io/downloads) installed and your AWS credentials configured.
@@ -340,6 +402,7 @@ This project is open-source under the [MIT LICENSE](LICENSE)
 .
 
 ## 🔖 Tags
+
 
 
 
