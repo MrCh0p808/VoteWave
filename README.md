@@ -25,222 +25,216 @@ As Per : September-October 2025
 ```mermaid
 ---
 config:
-  theme: neo-dark
+  theme: redux-dark
   layout: dagre
-  look: neo
 ---
-flowchart LR
- subgraph subGraph0["External Systems"]
-        User["👤 User"]
+flowchart TB
+ subgraph EXT["External Systems"]
+        USER(["User"])
   end
- subgraph React_State["React State & Components"]
-        PollForm["📝 CreatePollForm\n- pollQuestion\n- options[] (VoteUp, VoteDown, Abstain)\n- startDate, endDate\n- coverImage"]
-        PollFeed["📜 PollFeed\nprops: polls\nstate: selectedPoll, votes"]
-        VoteButton["🗳️ VoteButton\nstate: voteState"]
-        Session["🔑 Session\n- userSession\n- token"]
+ subgraph FE["Frontend (React + TS)"]
+        UI(["Web UI\nLogin, Profile, Polls, Feed, Notifs, Booths, Chat"])
+        API(["API Client Layer\nfetch/axios"])
+        STATE(["React State\nSession, PollFeed, VoteButton, Profile"])
   end
- subgraph API_Calls["Frontend API Calls"]
-        FetchPolls["fetchPolls()"]
-        CreatePoll["createPoll()"]
-        CastVote["castVote()"]
-        GetFeed["getFeed()"]
+ subgraph INFRA["Infrastructure"]
+        TF{{"Terraform"}}
+        DOCKER{{"Docker Compose"}}
+        ALB[/"App Load Balancer"/]
+        APIGW[/"API Gateway"/]
   end
- subgraph Frontend["Frontend (VoteWaveDemo.tsx)"]
-        UI["🌐 Web UI"]
-        React_State
-        API_Calls
+ subgraph AUTH["Auth Service"]
+        AAPI(["Endpoints:\nlogin, register, profile"])
+        ADB[("users db")]
   end
- subgraph Infra["Infrastructure & Operations"]
-        TF["🔧 Terraform\n- var.vpc_cidr\n- var.db_username\n- var.db_password"]
-        Docker["🐳 Docker\n- DB_HOST\n- REDIS_HOST\n- S3_BUCKET"]
-        ALB["⚖️ Application Load Balancer"]
-        API_GW["🚪 API Gateway\nroutes via routeKey, authHeader"]
+ subgraph PROF["Profiles Service"]
+        PAPI(["Endpoints:\nget profile, update profile"])
+        PDB[("profiles db")]
   end
- subgraph Auth["Auth Service"]
-        Auth_API["🔐 Auth API\n/login, /register, /profile"]
-        DB_Users[("📂 users table\n(id, email, password_hash, created_at)")]
+ subgraph POLLS["Polls Service"]
+        POLAPI(["Endpoints:\ncreate poll, vote, get poll"])
+        POLDB[("polls, votes db")]
+        PBUCKET[["S3: poll covers"]]
+        PCACHE{{"Redis: poll cache"}}
   end
- subgraph Profiles["Profiles & Identity Service"]
-        Profiles_API["👤 Profiles API\nGET /profiles/{id}, PUT /profiles"]
-        DB_Profiles[("🗄️ profiles table\n(user_id, username, bio, profile_pic_url)")]
+ subgraph FOL["Follows Service"]
+        FAPI(["Endpoints:\nfollow, unfollow, list"])
+        FDB[("follows db")]
   end
- subgraph Polls["Polls Service"]
-        Polls_API["📊 Polls API\n/createPoll, /vote, /getPolls"]
-        DB_Polls[("🗄️ polls table\n(id, question, options[], cover_img, created_at)\nvotes table\n(id, poll_id, user_id, option)\ncomments table (ref)")]
-        S3_Polls[("🪣 S3 Bucket\npollCovers/")]
+ subgraph EXPR["Expressions Service"]
+        EAPI(["Endpoints:\nadd expression, remove expression"])
+        EDB[("expressions db")]
   end
- subgraph Follows["Follows & Connections Service"]
-        Follows_API["🔗 Follows API\nPOST/DELETE follows\nGET followers/following"]
-        DB_Follows[("🗄️ follows table\n(follower_id, followed_id)")]
+ subgraph COM["Comments Service"]
+        CAPI(["Endpoints:\nadd comment, list comments, delete"])
+        CDB[("comments db")]
   end
- subgraph Expressions["Expressions Service"]
-        Expr_API["🌊 Expressions API\nPOST /expressions/{item_id}, DELETE /expressions/{item_id}"]
-        DB_Expr[("🗄️ expressions table\n(id, user_id, item_id, type: wave|ripple)")]
+ subgraph FEED["Feed Service"]
+        FDAPI(["Endpoints:\nfeed, search, trending"])
+        FDDB[("aggregated data")]
+        FDSEARCH[/"Search Engine"/]
   end
- subgraph Comments["Comments Service"]
-        Comments_API["💬 Comments API\nPOST/GET/DELETE comments"]
-        DB_Comments[("🗄️ comments table\n(id, user_id, item_id, text, created_at)")]
+ subgraph NOTIF["Notifications Service"]
+        NAPI(["Endpoints:\nlist notifs, mark read"])
+        NDB[("notifications db")]
   end
- subgraph Feed["Feed & Discovery Service"]
-        Feed_API["📰 Feed API\nGET /feed, /search, /explore/trending"]
-        Search_Engine["🔍 Search Engine\n(Postgres FTS / Elasticsearch)"]
+ subgraph BOOTH["VoteBooth Service"]
+        BAPI(["Endpoints:\ncreate booth, join booth, pin poll"])
+        BDB[("booths db")]
   end
- subgraph Notifs["Notifications Service"]
-        Notif_API["🔔 Notifications API\nGET /notifications, POST /mark-read"]
-        DB_Notifs[("🗄️ notifications table\n(id, recipient_id, sender_id, type, content_id, is_read)")]
+ subgraph MSG["Messaging Service"]
+        MAPI(["Endpoints:\nget msgs, post msg, ws chat"])
+        MDB[("messages db")]
+        MPUBSUB{{"Redis pub/sub"}}
   end
- subgraph Services["VoteWave Microservices"]
-        Auth
-        Profiles
-        Polls
-        Follows
-        Expressions
-        Comments
-        Feed
-        Notifs
+ subgraph SHARED["Shared Cloud Resources"]
+        RDS[("Postgres RDS")]
+        REDIS{{"Redis Cache"}}
+        S3[["S3 Buckets"]]
   end
- subgraph Shared["AWS Cloud Resources"]
-        RDS[("🐘 PostgreSQL RDS\nschemas: users, profiles, polls, votes, follows, expressions, comments, notifications")]
-        Redis[("⚡ Redis Cache\npollResultsCache, sessionStore")]
-        S3[("🪣 S3 Buckets\npollCovers/, userUploads/")]
-  end
-    User -- Requests --> UI
-    UI -- API Calls --> ALB
-    ALB -- Routes --> API_GW
-    API_GW --> Auth & Profiles & Polls & Follows & Expressions & Comments & Feed & Notifs
-    Auth --> DB_Users
-    Profiles --> DB_Profiles
-    Polls --> DB_Polls & S3_Polls
-    Follows --> DB_Follows
-    Expressions --> DB_Expr
-    Comments --> DB_Comments
-    Feed --> Search_Engine
-    Notifs --> DB_Notifs
-    Services --> RDS & Redis & S3
-    TF -- Provisions --> Shared
-    Docker -- Manages --> Services
+    USER --> UI
+    UI --> API
+    API --> ALB
+    ALB --> APIGW
+    APIGW --> AUTH & PROF & POLLS & FOL & EXPR & COM & FEED & NOTIF & BOOTH & MSG
+    AUTH --> ADB
+    PROF --> PDB
+    POLLS --> POLDB & PBUCKET & PCACHE
+    FOL --> FDB
+    EXPR --> EDB
+    COM --> CDB
+    FEED --> FDDB & FDSEARCH
+    NOTIF --> NDB
+    BOOTH --> BDB
+    MSG --> MDB & MPUBSUB
+    SHARED --> RDS & REDIS & S3
+    TF --> SHARED
+    DOCKER --> AUTH & PROF & POLLS & FOL & EXPR & COM & FEED & NOTIF & BOOTH & MSG
+    caption["VoteWave Microservices Architecture"]
+
 ```
 ---
 ## End-To-End Request Life-Cycle
 ```mermaid
 ---
 config:
-  theme: neo-dark
+  theme: dark
 ---
 sequenceDiagram
     autonumber
     participant U as 👤 User
-    participant UI as 🌐 Web UI (React)
-    participant ALB as ⚖️ ALB
+    participant UI as 🖥️ Web UI (React)
+    participant ALB as ⚖️ ALB (Load Balancer)
     participant APIGW as 🚪 API Gateway
     participant AUTH as 🔐 Auth Service
-    participant PROFILES as 👤 Profiles Service
+    participant PROFILES as 🗂️ Profiles Service
     participant POLLS as 📊 Polls Service
     participant FOLLOWS as 🔗 Follows Service
     participant EXPR as 🌊 Expressions Service
     participant COMMENTS as 💬 Comments Service
     participant FEED as 📰 Feed Service
     participant NOTIFS as 🔔 Notifications Service
-    participant RDS as 🐘 RDS (Postgres)
-    participant REDIS as ⚡ Redis Cache
-    participant S3 as 🪣 S3 Bucket
+    participant BOOTH as 🏛️ VoteBooth Service
+    participant MSG as 💬 Messaging Service
+    participant RDS as 🐘 DB (Postgres)
+    participant REDIS as ⚡ Cache (Redis)
+    participant S3 as 🪣 Storage (S3)
     participant SEARCH as 🔍 Search Engine
-
-    %% === Authentication ===
-    U->>UI: Submit login/register form
+    U->>UI: Submit login/register
     UI->>ALB: HTTP request
-    ALB->>APIGW: Forward request
+    ALB->>APIGW: Forward
     APIGW->>AUTH: /login or /register
-    AUTH->>RDS: Verify or insert user
-    RDS-->>AUTH: userID, token
-    AUTH-->>APIGW: token returned
-    APIGW-->>UI: Auth success
+    AUTH->>RDS: Verify/insert user
+    RDS-->>AUTH: userId + token
+    AUTH-->>APIGW: Auth success
+    APIGW-->>UI: Return token
     UI->>U: Session stored
-
-    %% === Profile Management ===
-    U->>UI: Update profile (bio, pic)
+    U->>UI: Update profile
     UI->>ALB: API call
-    ALB->>APIGW: Forward request
+    ALB->>APIGW: Forward
     APIGW->>PROFILES: /profiles
     PROFILES->>RDS: Update profiles table
     PROFILES-->>APIGW: Success
     APIGW-->>UI: Profile updated
     UI->>U: Profile refreshed
-
-    %% === Poll Creation ===
-    U->>UI: Create poll (question, options, cover)
+    U->>UI: Create poll (Q + options + cover)
     UI->>ALB: API call
-    ALB->>APIGW: Forward request
+    ALB->>APIGW: Forward
     APIGW->>POLLS: /createPoll
-    POLLS->>RDS: Insert into polls table
-    POLLS->>S3: Upload poll cover
-    POLLS-->>APIGW: pollID returned
+    POLLS->>RDS: Insert poll
+    POLLS->>S3: Upload cover
+    POLLS-->>APIGW: pollId returned
     APIGW-->>UI: Poll created
     UI->>U: Poll visible
-
-    %% === Voting ===
-    U->>UI: Cast vote (pollID, option)
+    U->>UI: Cast vote
     UI->>ALB: API call
-    ALB->>APIGW: Forward request
+    ALB->>APIGW: Forward
     APIGW->>POLLS: /vote
-    POLLS->>RDS: Insert into votes table
-    POLLS->>REDIS: Update pollResultsCache
+    POLLS->>RDS: Insert vote
+    POLLS->>REDIS: Update poll cache
     POLLS-->>APIGW: Vote success
     APIGW-->>UI: Updated results
     UI->>U: Vote shown
-
-    %% === Expressions (Waves/Ripples) ===
-    U->>UI: Add expression (wave/ripple)
+    U->>UI: Add expression
     UI->>ALB: API call
-    ALB->>APIGW: Forward request
-    APIGW->>EXPR: /expressions/{item_id}
-    EXPR->>RDS: Insert into expressions table
-    EXPR-->>APIGW: Expression saved
-    APIGW-->>UI: UI updated
+    ALB->>APIGW: Forward
+    APIGW->>EXPR: /expressions
+    EXPR->>RDS: Insert expression
+    EXPR-->>APIGW: Saved
+    APIGW-->>UI: Update UI
     UI->>U: Expression visible
-
-    %% === Comments ===
     U->>UI: Post comment
     UI->>ALB: API call
-    ALB->>APIGW: Forward request
-    APIGW->>COMMENTS: /comments/{item_id}
-    COMMENTS->>RDS: Insert into comments table
-    COMMENTS-->>APIGW: Comment saved
-    APIGW-->>UI: Comment displayed
+    ALB->>APIGW: Forward
+    APIGW->>COMMENTS: /comments
+    COMMENTS->>RDS: Insert comment
+    COMMENTS-->>APIGW: Saved
+    APIGW-->>UI: Display comment
     UI->>U: Comment visible
-
-    %% === Follows ===
-    U->>UI: Follow another user
+    U->>UI: Follow user
     UI->>ALB: API call
-    ALB->>APIGW: Forward request
-    APIGW->>FOLLOWS: /follows/{id}
-    FOLLOWS->>RDS: Insert into follows table
+    ALB->>APIGW: Forward
+    APIGW->>FOLLOWS: /follows
+    FOLLOWS->>RDS: Insert follow
     FOLLOWS-->>APIGW: Success
     APIGW-->>UI: Follow confirmed
-    UI->>U: Updated feed connections
-
-    %% === Feed & Search ===
+    UI->>U: Feed connections updated
     U->>UI: Open feed
     UI->>ALB: API call
-    ALB->>APIGW: Forward request
+    ALB->>APIGW: Forward
     APIGW->>FEED: /feed
-    FEED->>RDS: Query polls, follows, expressions
-    FEED->>SEARCH: Run text/hashtag search
-    FEED->>S3: Retrieve media
+    FEED->>RDS: Query polls/follows/expr
+    FEED->>SEARCH: Run text search
+    FEED->>S3: Get media
     FEED-->>APIGW: Feed data
-    APIGW-->>UI: Feed delivered
+    APIGW-->>UI: Deliver feed
     UI->>U: Personalized feed
-
-    %% === Notifications ===
-    NOTIFS->>RDS: Insert notification (wave, comment, follow, poll update)
-    U->>UI: Check notifications
+    NOTIFS->>RDS: Insert notif (wave/comment/follow)
+    U->>UI: Check notifs
     UI->>ALB: API call
-    ALB->>APIGW: Forward request
+    ALB->>APIGW: Forward
     APIGW->>NOTIFS: /notifications
-    NOTIFS->>RDS: Fetch notifications
-    NOTIFS-->>APIGW: Notifications list
-    APIGW-->>UI: Notifications delivered
-    UI->>U: User sees notifications
+    NOTIFS->>RDS: Fetch notifs
+    NOTIFS-->>APIGW: List returned
+    APIGW-->>UI: Deliver notifs
+    UI->>U: Notifs visible
+    U->>UI: Join booth
+    UI->>ALB: API call
+    ALB->>APIGW: Forward
+    APIGW->>BOOTH: /booths/join
+    BOOTH->>RDS: Update booth_members
+    BOOTH-->>APIGW: Join confirmed
+    APIGW-->>UI: Booth joined
+    UI->>U: Booth page refreshed
+    U->>UI: Send booth message
+    UI->>ALB: WS/HTTP request
+    ALB->>APIGW: Forward
+    APIGW->>MSG: /messages or WS
+    MSG->>MDB: Save message
+    MSG->>REDIS: Publish event
+    MSG-->>APIGW: Ack
+    APIGW-->>UI: Message delivered
+    UI->>U: Chat updated
 
 ```
 ---
@@ -507,6 +501,7 @@ This project is open-source under the [MIT LICENSE](LICENSE)
 .
 
 ## 🔖 Tags
+
 
 
 
