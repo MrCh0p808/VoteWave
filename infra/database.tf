@@ -49,8 +49,14 @@ resource "local_file" "db_env" {
     DB_NAME=${aws_db_instance.votewave_db.db_name}
     DB_USER=${aws_db_instance.votewave_db.username}
     DB_PASSWORD=${random_password.db.result}
+    DB_PORT=${aws_db_instance.votewave_db.port}
   EOT
   filename        = "${path.module}/.env"
   file_permission = "0600"
 }
-
+# .env in backend/polls-service/
+resource "local_file" "db_env_backend" {
+  content = local_file.db_env_infra.content
+  filename        = "${path.module}/../backend/polls-service/.env"
+  file_permission = "0600"
+}
