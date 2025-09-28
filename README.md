@@ -389,6 +389,110 @@ flowchart LR
         Notify
   end
 ```
+## STANDARDS & API GUIDELINES
+```mermaid
+---
+config:
+  theme: redux-dark
+  layout: dagre
+---
+flowchart TB
+caption["VoteWave Standards & API Guidelines"]
+ subgraph STYLE["Code Style"]
+        PY["Python: PEP8 + Black"]
+        TS["TypeScript: ESLint + Prettier"]
+        COMMITS["Commits: Conventional"]
+  end
+ subgraph ERRORS["Error Handling"]
+        JSONERR["JSON: {error,msg,code}"]
+        HTTPERR["HTTP: 2xx/4xx/5xx"]
+        VALID["Validation errors: 422"]
+  end
+ subgraph AUTH["Authentication"]
+        USERJWT["JWT for users"]
+        SRVJWT["JWT for services"]
+        REFRESH["Token refresh flow"]
+  end
+ subgraph VERSION["API Versioning"]
+        V1["Prefix: /api/v1/"]
+        V2["Breaking → /api/v2/"]
+  end
+ subgraph DBMIG["Database Migrations"]
+        ALEMBIC["Alembic / Flyway"]
+        SCHEMA["Per-service schema"]
+  end
+ subgraph TESTS["Testing"]
+        UNIT["Unit: pytest / Jest"]
+        INTEG["Integration: Docker Compose"]
+        E2E["E2E: Postman / Playwright"]
+        LOAD["Load: k6"]
+  end
+ subgraph LOGGING["Logging & Monitoring"]
+        LOGS["JSON logs (stdout)"]
+        LEVELS["Levels: DEBUG→ERROR"]
+        PROM["Prometheus + Grafana"]
+        ALERTS["Alerts: CPU/mem/Redis"]
+  end
+ subgraph SECRETS["Secrets & Config"]
+        ENV[".env local only"]
+        AWSSEC["AWS Secrets Manager"]
+        ROTATE["Rotate credentials"]
+  end
+ subgraph RATE["Rate Limiting & Security"]
+        RLIMIT["Redis token bucket"]
+        PROTECT["Protect login/chat"]
+        CORS["Strict CORS"]
+  end
+ subgraph ARCH["Standards & Conventions"]
+    direction TB
+        STYLE
+        ERRORS
+        AUTH
+        VERSION
+        DBMIG
+        TESTS
+        LOGGING
+        SECRETS
+        RATE
+  end
+ subgraph REST["REST Principles"]
+        NOUNS["Resources = nouns (/polls)"]
+        VERBS["Actions = HTTP verbs"]
+  end
+ subgraph ENDPOINTS["Endpoints"]
+        POST["POST /resource → create"]
+        GETALL["GET /resource → list"]
+        GETONE["GET /resource/{id} → retrieve"]
+        PUT["PUT /resource/{id} → update"]
+        DEL["DELETE /resource/{id} → remove"]
+  end
+ subgraph REQRES["Request & Response"]
+        FORMAT["JSON only"]
+        VALIDATE["Schema validation"]
+        SUCCESS["Success: {data,meta}"]
+        ERROR["Error: {error,msg,code}"]
+  end
+ subgraph PAGINATION["Pagination & Filters"]
+        LIMIT["limit+offset (20 default)"]
+        MAX["max 100 items"]
+        FILTER["filter + sort params"]
+  end
+ subgraph DOCS["API Documentation"]
+        SWAG["OpenAPI / Swagger"]
+        EXAMPLES["Request/response examples"]
+        CHEATS["Markdown cheatsheet for FE"]
+  end
+ subgraph API["API Guidelines"]
+    direction TB
+        REST
+        ENDPOINTS
+        REQRES
+        PAGINATION
+        DOCS
+  end
+    ARCH --> API
+```
+
 ## 🤝 Contributing
 
 - Got ideas or improvements?
@@ -403,6 +507,7 @@ This project is open-source under the [MIT LICENSE](LICENSE)
 .
 
 ## 🔖 Tags
+
 
 
 
