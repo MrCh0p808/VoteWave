@@ -9,6 +9,9 @@ from dotenv import load_dotenv
 load_dotenv()                               
 
 app = Flask(__name__)
+@app.route("/", methods=["GET"])
+def health_check():
+    return jsonify({"status": "ok", "service": "VoteWave Polls-Service"}), 200
 
 def get_db_connection():
     conn = psycopg2.connect(
@@ -70,8 +73,8 @@ def create_poll():
     conn.close()
 
     return jsonify({"message": "Poll created", "poll_id": poll_id}), 201
-
 if __name__ == "__main__":
-    init_db()
-    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5002)), debug=True)
+    port = int(os.environ.get("PORT", 5002))
+    print(f"Starting VoteWave Polls-Service on http://127.0.0.1:{port}")
+    app.run(debug=True, host="0.0.0.0", port=port)
 

@@ -2,22 +2,33 @@
 import os
 import time
 import psycopg2
-import psycopg2.extras          
-from flask import Flask, request, jsonify
-from dotenv import load_dotenv      
+import psycopg2.extras
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
+from dotenv import load_dotenv
+from shared.config import settings
 
-load_dotenv()                          
+load_dotenv()
 
-app = Flask(__name__)
+app = FastAPI(title="Auth Service")
 
+# ---------- Database Utilities ----------
 def get_db_connection():
     conn = psycopg2.connect(
         host=os.environ.get("DB_HOST", "localhost"),
-        database=os.environ.get("DB_NAME", "votewavedb"),
-        user=os.environ.get("DB_USER", "votewaveadmin"),
-        password=os.environ.get("DB_PASSWORD")
+        database=os.environ.get("DB_NAME", "votewave"),
+        user=os.environ.get("DB_USER", "postgres"),
+        password=os.environ.get("DB_PASSWORD", "postgres")
     )
     return conn
+
+def test_db_connection():
+    try:
+        conn = get_db_connection()
+        conn.close()
+        return True
+    except Exception:
+        return False
 
 def wait_for_db(max_tries=12, delay=5):
     for i in range(max_tries):
@@ -44,12 +55,16 @@ def init_db():
     cur.close()
     conn.close()
 
-@app.route("/register", methods=["POST"])
-def register_user():
-    data = request.get_json(force=True)
-    username = data.get("username")
+# ---------- Pydantic Models ----------
+class RegisterRequest(BaseModel):
+    username: str
+
+# ---------- Routes ----------
+@app.post("/register")
+def register_user(req: RegisterRequest):
+    username = req.username.strip()
     if not username:
-        return jsonify({"error": "Username is required"}), 400
+        raise HTTPException(status_code=400, detail="Username is required")
 
     conn = get_db_connection()
     cur = conn.cursor()
@@ -58,7 +73,7 @@ def register_user():
     if cur.fetchone():
         cur.close()
         conn.close()
-        return jsonify({"error": "Username already exists"}), 400
+        raise HTTPException(status_code=400, detail="Username already exists")
 
     cur.execute("INSERT INTO users (username) VALUES (%s);", (username,))
     conn.commit()
@@ -66,9 +81,19 @@ def register_user():
     cur.close()
     conn.close()
 
-    return jsonify({"message": f"User '{username}' registered successfully"}), 201
+    return {"message": f"User '{username}' registered successfully"}
 
+@app.get("/health")
+def health_check():
+    return {
+        "status": "ok",
+        "service": "auth-service",
+        "db_connected": test_db_connection(),
+        "env": settings.APP_ENV
+    }
+
+# ---------- Entrypoint ----------
 if __name__ == "__main__":
-    init_db()   
-    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5001)), debug=True)
-
+    init_db()
+    import uvicorn
+    uvicorn.run("app:app", host="0.0.0.0", port=8000, reload=True)
