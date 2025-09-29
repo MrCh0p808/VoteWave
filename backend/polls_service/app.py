@@ -1,4 +1,4 @@
-# polls-service/app.py
+# polls_service/app.py
 import os
 import time
 import psycopg2

@@ -1,12 +1,13 @@
-# auth-service/app.py
+# auth_service/app.py
 import os
 import time
-import psycopg2
-import psycopg2.extras
-from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
-from dotenv import load_dotenv
+import psycopg2 # type: ignore
+import psycopg2.extras # type: ignore
+from fastapi import FastAPI, HTTPException # type: ignore
+from pydantic import BaseModel # type: ignore
+from dotenv import load_dotenv # type: ignore
 from shared.config import settings
+#from backend.shared.config import settings
 
 load_dotenv()
 
@@ -87,7 +88,7 @@ def register_user(req: RegisterRequest):
 def health_check():
     return {
         "status": "ok",
-        "service": "auth-service",
+        "service": "auth_service",
         "db_connected": test_db_connection(),
         "env": settings.APP_ENV
     }
@@ -95,5 +96,5 @@ def health_check():
 # ---------- Entrypoint ----------
 if __name__ == "__main__":
     init_db()
-    import uvicorn
+    import uvicorn # type: ignore
     uvicorn.run("app:app", host="0.0.0.0", port=8000, reload=True)
