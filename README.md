@@ -16,7 +16,7 @@ This repo automates the **entire infrastructure lifecycle**, from networking and
 
 - 📖 **[STORY.md](Docs/STORY.md)** – The journey and inspiration behind VoteWave  
 - ⚙️ **[SETUP.md](Docs/SETUP.md)** – Step-by-step setup and deployment guide  
-- 📑 **[DOCS.md](Docs/DOCS.md)** – Phase-wise development and infrastructure documentation  
+- 📑 **[DOCS.md](docs/DOCS.md)** – Phase-wise development and infrastructure documentation  
 
 ---
 ## Architechture
@@ -501,6 +501,7 @@ This project is open-source under the [MIT LICENSE](LICENSE)
 .
 
 ## 🔖 Tags
+
 
 
 
