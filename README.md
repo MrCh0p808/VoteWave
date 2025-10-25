@@ -273,7 +273,7 @@ export AWS_SECRET_ACCESS_KEY="your_secret_key"
 
 Ensure your local machine has Terraform installed (terraform -v).
 
-Follow [SETUP.md](SETUP.md) for detailed deployment instructions.
+Follow **[SETUP.md](docs/SETUP.md)** for detailed deployment instructions.
 
 ## MicroServices At Glance
 ```mermaid
@@ -501,6 +501,7 @@ This project is open-source under the [MIT LICENSE](LICENSE)
 .
 
 ## 🔖 Tags
+
 
 
 
