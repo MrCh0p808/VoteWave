@@ -88,29 +88,38 @@ As Per : September-October 2025
 ---
 config:
   theme: redux-dark
-  layout: dagre
+  layout: elk
+  look: classic
 ---
-flowchart TB
- subgraph EXT["External Systems"]
+flowchart LR
+ subgraph EXT["🌍 External Systems (Public Internet)"]
         USER(["User"])
   end
- subgraph FE["Frontend (React + TS)"]
+ subgraph FE["🖥️ Frontend (React + TypeScript) — Public"]
         UI(["Web UI\nLogin, Profile, Polls, Feed, Notifs, Booths, Chat"])
         API(["API Client Layer\nfetch/axios"])
         STATE(["React State\nSession, PollFeed, VoteButton, Profile"])
   end
- subgraph INFRA["Infrastructure"]
-        TF{{"Terraform"}}
-        DOCKER{{"Docker Compose"}}
+ subgraph PUB["Public Subnet"]
         ALB[/"App Load Balancer"/]
+  end
+ subgraph PRIV["Private Subnet"]
         APIGW[/"API Gateway"/]
+        SGNOTE(["🔒 SG Rules:\nOnly ALB or VPC CIDR allowed on ports 5001–5002"])
+  end
+ subgraph NET["🏗️ AWS Networking"]
+    direction TB
+        PUB
+        PRIV
+        TF{{"Terraform (IaC)"}}
+        DOCKER{{"Docker Compose (Service Builds)"}}
   end
  subgraph AUTH["Auth Service"]
-        AAPI(["Endpoints:\nlogin, register, profile"])
+        AAPI(["Endpoints:\n/login, /register, /profile"])
         ADB[("users db")]
   end
  subgraph PROF["Profiles Service"]
-        PAPI(["Endpoints:\nget profile, update profile"])
+        PAPI(["Endpoints:\nget/update profile"])
         PDB[("profiles db")]
   end
  subgraph POLLS["Polls Service"]
@@ -124,11 +133,11 @@ flowchart TB
         FDB[("follows db")]
   end
  subgraph EXPR["Expressions Service"]
-        EAPI(["Endpoints:\nadd expression, remove expression"])
+        EAPI(["Endpoints:\nadd/remove expression"])
         EDB[("expressions db")]
   end
  subgraph COM["Comments Service"]
-        CAPI(["Endpoints:\nadd comment, list comments, delete"])
+        CAPI(["Endpoints:\nadd/list/delete comment"])
         CDB[("comments db")]
   end
  subgraph FEED["Feed Service"]
@@ -141,7 +150,7 @@ flowchart TB
         NDB[("notifications db")]
   end
  subgraph BOOTH["VoteBooth Service"]
-        BAPI(["Endpoints:\ncreate booth, join booth, pin poll"])
+        BAPI(["Endpoints:\ncreate/join/pin poll"])
         BDB[("booths db")]
   end
  subgraph MSG["Messaging Service"]
@@ -149,7 +158,7 @@ flowchart TB
         MDB[("messages db")]
         MPUBSUB{{"Redis pub/sub"}}
   end
- subgraph SHARED["Shared Cloud Resources"]
+ subgraph SHARED["Shared Cloud Resources — Private"]
         RDS[("Postgres RDS")]
         REDIS{{"Redis Cache"}}
         S3[["S3 Buckets"]]
@@ -172,8 +181,7 @@ flowchart TB
     SHARED --> RDS & REDIS & S3
     TF --> SHARED
     DOCKER --> AUTH & PROF & POLLS & FOL & EXPR & COM & FEED & NOTIF & BOOTH & MSG
-    caption["VoteWave Microservices Architecture"]
-
+    caption["VoteWave — Microservices Architecture with Network Security Boundary (Private Subnets + Restricted SGs)"]
 ```
 ---
 ## End-To-End Request Life-Cycle
@@ -563,6 +571,7 @@ This project is open-source under the [MIT LICENSE](LICENSE)
 .
 
 ## 🔖 Tags
+
 
 
 
