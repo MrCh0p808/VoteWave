@@ -54,9 +54,9 @@ resource "local_file" "db_env" {
   filename        = "${path.module}/.env"
   file_permission = "0600"
 }
-# .env in backend/polls-service/
+# .env in backend/backend/polls_service/
 resource "local_file" "db_env_backend" {
-  content = local_file.db_env_infra.content
-  filename        = "${path.module}/../backend/polls-service/.env"
+  content         = local_file.db_env_infra.content
+  filename        = "${path.module}/../backend/backend/polls_service/.env"
   file_permission = "0600"
 }

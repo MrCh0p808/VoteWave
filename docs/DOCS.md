@@ -71,7 +71,7 @@ graph TD
 Refactored the monolith into two services:
 
 - auth-service
-- polls-service
+- backend/polls_service
 
 ### 2. Production-Grade Database
 Provisioned an AWS RDS PostgreSQL instance.

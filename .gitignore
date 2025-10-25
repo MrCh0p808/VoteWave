@@ -1,9 +1,6 @@
 # --- ENV & Secrets ---
 *.env
 *.pem
-terraform.tfvars
-*.key
-*.crt
 
 # --- Terraform ---
 *.tfstate
@@ -11,7 +8,6 @@ terraform.tfvars
 *.backup
 *.tfstate.MANUAL-BACKUP
 .terraform/
-.terraform.lock.hcl
 
 # --- Python ---
 venv/
@@ -21,8 +17,7 @@ __pycache__/
 *.pyo
 *.pyd
 *.egg-info/
-.env/
-.pytest_cache/
+.env/          # if you ever use python-dotenv
 
 # --- Node / Frontend ---
 node_modules/
@@ -31,19 +26,16 @@ build/
 .npm/
 .npmrc
 .nvmrc
-package-lock.json 
-.vite/
-.parcel-cache/
-.turbo/
+.vite
+.eslintcache
 coverage/
+package-lock.json    # optional if you only want yarn.lock
 
 # --- Logs ---
 *.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-debug.log
-*.stackdump
 
 # --- OS / Editor Artifacts ---
 *.swp
@@ -52,38 +44,26 @@ debug.log
 *Thumbs.db
 .idea/
 .vscode/
-*.sublime-workspace
-*.sublime-project
 
-# --- Media Files ---
+# --- Media Files (don’t commit raw images to repo) ---
 *.png
 *.jpeg
 *.jpg
 *.gif
 *.svg
-*.ico
-*.webp
-*.mp4
-*.mp3
-*.wav
 *.3dev
 
 # --- Project-specific ---
 VoteWave_RepoTreeLocalFiles/
+.JugaadBKP/
 Misc/
 issues.json
 Phase2Issues.md
-VoteWave_Rehydrated_*.txt
+JugaadBKP_3DevHax.py
 
 # --- Temporary / Backup Files ---
 *.txt
 *.sh
 *.bak
 *.tmp
-*.old
-*.zip
-*.seed
-*.db
-*.sqlite
-*.sqlite3
-*.pid
+
