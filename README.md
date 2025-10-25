@@ -1,9 +1,71 @@
 # VoteWave : Cloud-Native Polling App
+<p align="center">
+  <!-- Project Status -->
+  <img src="https://img.shields.io/badge/Status-Active-brightgreen?style=flat-square" alt="Status" style="height:22px;">&nbsp;&nbsp;
 
-[![Terraform](https://img.shields.io/badge/Terraform-v1.9+-623CE4?logo=terraform)](https://www.terraform.io/)
-[![AWS](https://img.shields.io/badge/AWS-EC2%20%7C%20RDS%20%7C%20S3-orange?logo=amazon-aws)](https://aws.amazon.com/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![Made with Love](https://img.shields.io/badge/Made%20with-❤️-red.svg)]()
+  <!-- Contributions -->
+  <a href="https://github.com/MrCh0p808/AnnaSewa?tab=readme-ov-file#-contribution">
+  <img src="https://img.shields.io/badge/Contributions-Welcome-blueviolet?style=flat-square&logo=github&logoColor=white" alt="Contributions" style="height:22px;">
+  </a>&nbsp;&nbsp;
+  <!-- LinkedIn -->
+  <a href="https://www.linkedin.com/in/trideev-ganguly/">
+    <img src="https://img.shields.io/badge/Connect%20on%20LinkedIn-0A66C2?style=flat-square&logo=linkedin&logoColor=white"height=22px>
+  </a>&nbsp;&nbsp;
+  <!-- LICENSE -->
+  <a href="https://github.com/MrCh0p808/VoteWave/blob/main/LICENSE]">
+    <img src="https://img.shields.io/badge/License-MIT-green.svg" alt="License" style="height:22px;">
+  </a>&nbsp;&nbsp;
+  <!-- Made With Love -->
+  <a href="https://img.shields.io/badge/Made%20with-❤️-red.svg">
+    <img src="https://img.shields.io/badge/Made%20with-❤️-red.svg" alt="License" style="height:22px;">
+  </a>&nbsp;&nbsp;
+</p>
+<p align="center">
+  <!-- Frontend -->
+  <a href="https://react.dev/">
+    <img src="https://img.shields.io/badge/Frontend-React-61DAFB?style=flat-square&logo=react&logoColor=white" alt="React" style="height:22px;">
+  </a>
+  <!-- Backend -->
+  <a href="https://www.python.org/doc/">
+    <img src="https://img.shields.io/badge/Backend-Python-3776AB?style=flat-square&logo=python&logoColor=white" alt="Python" style="height:22px;">
+  </a>
+  <a href="https://fastapi.tiangolo.com/">
+    <img src="https://img.shields.io/badge/API-FastAPI-009688?style=flat-square&logo=fastapi&logoColor=white" alt="FastAPI" style="height:22px;">
+  </a>
+  <a href="#">
+    <img src="https://img.shields.io/badge/API-REST-02569B?style=flat-square&logo=rest&logoColor=white" alt="REST API" style="height:22px;">
+  </a>
+  <!-- Cloud + Infra -->
+  <a href="https://aws.amazon.com/">
+    <img src="https://img.shields.io/badge/AWS-EC2%20%7C%20RDS%20%7C%20S3-orange?logo=amazon-aws" alt="AWS" style="height:22px;">
+  </a>
+  <a href="https://aws.amazon.com/">
+    <img src="https://img.shields.io/badge/Cloud-AWS-FF9900?style=flat-square&logo=amazonaws&logoColor=white" alt="AWS" style="height:22px;">
+  </a>
+  <a href="https://docs.aws.amazon.com/eks/">
+    <img src="https://img.shields.io/badge/Kubernetes-EKS-FF9900?style=flat-square&logo=kubernetes&logoColor=white" alt="EKS" style="height:22px;">
+  </a>
+  <a href="https://developer.hashicorp.com/terraform/docs">
+    <img src="https://img.shields.io/badge/IaC-Terraform-7B42BC?style=flat-square&logo=terraform&logoColor=white" alt="Terraform" style="height:22px;">
+  </a>
+  <a href="https://docs.docker.com/">
+    <img src="https://img.shields.io/badge/Containers-Docker-2496ED?style=flat-square&logo=docker&logoColor=white" alt="Docker" style="height:22px;">
+  </a>
+  <a href="https://kubernetes.io/docs/">
+    <img src="https://img.shields.io/badge/Orchestration-Kubernetes-326CE5?style=flat-square&logo=kubernetes&logoColor=white" alt="Kubernetes" style="height:22px;">
+  </a>
+  <a href="https://docs.github.com/en/actions">
+    <img src="https://img.shields.io/badge/CI%2FCD-GitHub_Actions-2088FF?style=flat-square&logo=githubactions&logoColor=white" alt="GitHub Actions" style="height:22px;">
+  </a>
+
+  <!-- Monitoring -->
+  <a href="https://docs.aws.amazon.com/cloudwatch/">
+    <img src="https://img.shields.io/badge/Monitoring-CloudWatch-FF4F8B?style=flat-square&logo=amazoncloudwatch&logoColor=white" alt="CloudWatch" style="height:22px;">
+  </a>
+  <a href="https://grafana.com/docs/">
+    <img src="https://img.shields.io/badge/Monitoring-Grafana-F46800?style=flat-square&logo=grafana&logoColor=white" alt="Grafana" style="height:22px;">
+  </a>
+</p>
 
 ---
 
@@ -501,6 +563,7 @@ This project is open-source under the [MIT LICENSE](LICENSE)
 .
 
 ## 🔖 Tags
+
 
 
 
