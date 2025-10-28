@@ -1,118 +1,173 @@
-# VoteWave Phase 2 (Current) – Complete Architecture Story
+# 🧩 VoteWave : The Architecture Story
 
-This file represents the **end-to-end story of VoteWave Phase 2**, showing all components, workflows, DevOps pipelines, and monitoring setups.
+This file narrates the evolution of VoteWave from a simple monolith into a living, cloud-native system.  
+Each phase carries its own lessons, scars, and small wins that shaped the current infrastructure.
 
 ---
 
-## 🏗️ High-Level Architecture
+# 🌱 Phase 1 - The Seed (Monolith Days)
+
+The project started as one Python Flask file running on a single EC2 instance.  
+It had no secrets manager, no CI/CD, and no database, just raw curiosity.
 
 ```mermaid
 flowchart TD
-
-    U["Users / Voters"] -->|Access App| FE["Frontend (React / HTML / CSS)"]
-
-    FE -->|API Requests| LB["Load Balancer (ALB / NLB)"]
-
-    LB --> BE1["EC2 Instance 1 - Backend API"]
-    LB --> BE2["EC2 Instance 2 - Backend API"]
-
-    BE1 --> DB["RDS / DynamoDB"]
-    BE2 --> DB
-    DB --> LOGS["Logs & Metrics (CloudWatch / ELK)"]
-
-    BE1 --> S3["S3 Bucket - Static Files / Reports"]
-    BE2 --> S3
-    S3 --> LOGS
-
-    subgraph CICD [CI/CD Pipeline]
-        GIT["GitHub / Git Repo"] --> Jenkins["Jenkins / GitHub Actions"]
-        Jenkins --> Build["Build & Unit Tests"]
-        Build --> Deploy["Deploy to EC2 / S3"]
-        Deploy --> LB
+    Dev["👩‍💻 Developer"] -->|SSH + Docker Build| EC2["AWS EC2"]
+    EC2 --> APP["Flask Monolith Container"]
+    APP --> MEM["In-Memory Dict as DB"]
+    MEM -.-> LOST["Data Gone on Restart"]
+    subgraph Terraform["Terraform Basics"]
+        VPC["VPC + Subnet + SG"]
+        EC2
     end
+````
 
-    subgraph IaC [Infrastructure as Code]
-        Terraform["Terraform Scripts"]
-        Terraform --> AWS["AWS Resources: EC2, S3, RDS, IAM, Security Groups"]
-        AWS --> LB
-        AWS --> BE1
-        AWS --> BE2
-        AWS --> DB
-        AWS --> S3
-    end
+**Takeaway:** it worked. It proved the idea. That was enough to move on.
 
-    subgraph Security
-        IAM["IAM Roles & Policies"]
+---
+
+# 🌊 Phase 2 - Breaking the Monolith
+
+Once stability came, automation followed.
+Phase 2 focused on CI/CD, versioned containers, and real persistence.
+
+```mermaid
+flowchart TD
+    Dev["👨‍💻 git push"] --> GH["GitHub Actions"]
+    GH --> Build["Docker Build + Tag (Git SHA)"]
+    Build --> ECR1["ECR Repo Auth"]
+    Build --> ECR2["ECR Repo Polls"]
+    ECR1 --> EC2A["EC2 Instance A"]
+    ECR2 --> EC2B["EC2 Instance B"]
+    EC2A --> RDS["RDS PostgreSQL DB"]
+    EC2B --> RDS
+    RDS --> SM["Secrets Manager – Password"]
+    subgraph IaC["Terraform Infra"]
+        VPC["Custom VPC + Subnets"]
         SG["Security Groups"]
-        IAM --> BE1
-        IAM --> BE2
-        IAM --> S3
-        SG --> BE1
-        SG --> BE2
-        SG --> DB
+        S3["Remote State Bucket"]
+        DDB["State Lock Table"]
     end
-
-    subgraph Monitoring
-        CloudWatch["CloudWatch / Prometheus"]
-        ELK["ELK Stack / Centralized Logs"]
-        CloudWatch --> LOGS
-        ELK --> LOGS
-        LOGS --> Dashboard["Monitoring Dashboard & Alerts"]
-    end
-
-    S3 --> Reports["Election Reports / Analytics"]
-    Reports --> Admins["Admins & Election Officers"]
+    IaC --> EC2A
+    IaC --> RDS
+    IaC --> SG
 ```
-## VoteWave Phase 2 Infra Story – Mermaid Diagram
 
-Imagine the VoteWave infrastructure as a well-secured, automated house where each component has a role. Here's the visual story of Phase 2.
+**What changed**
+
+* Split into two services → `auth-service` and `polls_service`.
+* RDS replaced the in-memory store.
+* GitHub Actions built and pushed images automatically.
+* Terraform backend migrated to S3 + DynamoDB.
+* The pipeline stopped deploying directly, it only built.
+
+This shift separated *integration* from *deployment*, preparing for orchestration.
+
+---
+
+# ☁️ Phase 3 - Cloud-Native Infrastructure (Current)
+
+This is where VoteWave truly became a system.
+Every service lives in its own container, Terraform provisions everything, and the network is secure by design.
 
 ```mermaid
-flowchart TD
 
-    %% User and GitHub
-    U[Developer / GitHub Actions] -->|Push Code| CI[CI/CD Pipeline]
-    CI -->|Build Docker Images| ECR1[Votewave Auth ECR Repo]
-    CI -->|Build Docker Images| ECR2[Votewave Polls ECR Repo]
+flowchart LR
+    subgraph FE["🌐 Frontend (React + TypeScript)"]
+        UI["Web UI"]
+        API["API Client"]
+    end
 
-    %% VPC and Networking
-    VPC[VPC: Private Neighborhood] --> SubnetA[Subnet A: us-east-1a]
-    VPC --> SubnetB[Subnet B: us-east-1b]
-    IGW[Internet Gateway] --> VPC
-    RT[Route Table] --> VPC
-    SubnetA --> EC2A[EC2 Instance: Auth+Polls Docker]
-    SubnetB --> EC2B[EC2 Instance: Auth+Polls Docker]
+    subgraph PUB["Public Subnet"]
+        ALB[/"Application Load Balancer"/]
+    end
 
-    %% Security Groups
-    SG_EC2[SG: EC2 Servers] --> EC2A
-    SG_EC2 --> EC2B
-    SG_RDS[SG: RDS DB] --> RDS[RDS Postgres 14.11]
-    EC2A -->|Connect Port 5432| RDS
-    EC2B -->|Connect Port 5432| RDS
+    subgraph PRIV["Private Subnet"]
+        APIGW[/"API Gateway"/]
+        SGNOTE["Ports 5001–5002 only from ALB or VPC CIDR"]
+    end
 
-    %% Secrets
-    SM[Secrets Manager: DB Password] --> RDS
+    subgraph SRV["Backend Microservices"]
+        AUTH["🔐 Auth"]
+        PROF["👤 Profiles"]
+        POLL["📊 Polls"]
+        FOL["🔗 Follows"]
+        EXPR["🌊 Expressions"]
+        COMM["💬 Comments"]
+        FEED["📰 Feed"]
+        NOTIF["🔔 Notifications"]
+        BOOTH["🏛️ VoteBooth"]
+        MSG["💭 Messaging (WS + Redis Pub/Sub)"]
+    end
 
-    %% Docker Flow
-    ECR1 -->|Pull Auth Image| EC2A
-    ECR2 -->|Pull Polls Image| EC2A
-    ECR1 -->|Pull Auth Image| EC2B
-    ECR2 -->|Pull Polls Image| EC2B
+    subgraph DATA["Shared Resources"]
+        RDS["🐘 Postgres RDS"]
+        REDIS["⚡ Redis Cache"]
+        S3["🪣 S3 Buckets"]
+    end
 
-    %% Terraform State Management
-    S3[Terraform State Bucket: votewave-tfstate-bucket] --> DynamoDB[Lock Table: votewave-tf-locks]
-    Terraform[Terraform Scripts] --> S3
-    Terraform --> VPC
-    Terraform --> SG_EC2
-    Terraform --> SG_RDS
-    Terraform --> EC2A
-    Terraform --> EC2B
-    Terraform --> RDS
-    Terraform --> ECR1
-    Terraform --> ECR2
-    Terraform --> SM
-
-    %% Flow Connections
-    EC2A -->|App Running| Users[End Users Browser]
-    EC2B -->|App Running| Users
+    UI --> API --> ALB --> APIGW
+    APIGW --> SRV
+    SRV --> RDS
+    SRV --> REDIS
+    SRV --> S3
+    caption["VoteWave Phase 3 — Terraform-Managed Cloud with Secure Private Network"]
 ```
+
+**Key highlights**
+
+* Terraform controls **networking, compute, storage, and secrets**.
+* RDS passwords are generated automatically and stored in AWS Secrets Manager.
+* The backend CIDR is restricted; ports 5001 & 5002 open only to ALB.
+* Docker Compose helps local testing; AWS ALB + API Gateway handle live traffic.
+* Shared Redis/S3 provide caching and storage.
+* Monitoring through CloudWatch and Grafana keeps visibility high.
+
+**Lifecycle in simple terms**
+
+A user logs in → ALB routes → API Gateway → Auth Service → RDS → Token back → Feed updates via Redis.
+Every request flows inside Terraform-built security walls.
+
+---
+
+# 🚀 Phase 4 - The Horizon (EKS and GitOps)
+
+The next step is orchestration.
+Everything learned from Terraform and Docker now prepares VoteWave for Kubernetes.
+
+```mermaid
+graph TD
+    subgraph Future["Kubernetes and GitOps Journey"]
+        A["Terraform + Helm Charts"]
+        B["EKS Cluster (Worker Nodes for All Services)"]
+        C["ArgoCD / Flux for GitOps"]
+        D["Prometheus + Grafana + CloudWatch"]
+        E["Blue-Green Deploys + Auto-Scaling"]
+    end
+    A --> B --> C --> D --> E
+```
+
+**Expected outcomes**
+
+* Declarative deployments with Helm.
+* Self-healing pods and rolling updates.
+* Namespace isolation for staging vs production.
+* GitHub Actions → ArgoCD pipeline for full GitOps.
+
+---
+
+# 🧭 Reflection
+
+| Phase | Focus               | Result                                                  |
+| ----- | ------------------- | ------------------------------------------------------- |
+| 1     | Manual Baseline     | One Flask app on EC2 via Terraform                      |
+| 2     | CI/CD Foundation    | Dockerized services + RDS + ECR + Secrets Manager       |
+| 3     | Cloud-Native System | Full Terraform stack, private networking, observability |
+| 4     | Kubernetes Future   | EKS + GitOps + auto-scaling                             |
+
+VoteWave keeps growing carefully, balancing experimentation with structure.
+What began as one container on one instance is now a small ecosystem running in sync, and still humble enough to tell its story.
+
+```
+---
+
