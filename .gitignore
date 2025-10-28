@@ -8,6 +8,7 @@
 *.backup
 *.tfstate.MANUAL-BACKUP
 .terraform/
+.tfplan
 
 # --- Python ---
 venv/
@@ -60,6 +61,8 @@ Misc/
 issues.json
 Phase2Issues.md
 JugaadBKP_3DevHax.py
+Stable_JUGAADU_BKP.sh
+JUGAAD_BKP.sh
 
 # --- Temporary / Backup Files ---
 *.txt

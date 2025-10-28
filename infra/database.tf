@@ -1,4 +1,7 @@
-# database.tf
+locals {
+  db_url = "postgresql://${aws_db_instance.votewave_db.username}:${aws_db_instance.votewave_db.password}@${aws_db_instance.votewave_db.address}:${aws_db_instance.votewave_db.port}/${aws_db_instance.votewave_db.db_name}"
+}
+#database.tf
 
 # --- DB Subnet Group ---
 # rds needs at least 2 subnets across different AZs
@@ -21,7 +24,7 @@ resource "aws_db_instance" "votewave_db" {
   identifier             = "votewave-db-instance"
   allocated_storage      = 20
   engine                 = "postgres"
-  engine_version         = "14.13"
+  engine_version         = "14.17"
   instance_class         = "db.t3.micro"
   db_name                = "votewavedb"
   username               = "votewaveadmin"
@@ -59,4 +62,9 @@ resource "local_file" "db_env_backend" {
   content         = local_file.db_env_infra.content
   filename        = "${path.module}/../backend/backend/polls_service/.env"
   file_permission = "0600"
+}
+
+resource "local_file" "db_env_infra" {
+  filename = "${path.module}/../infra/.env.db"
+  content  = "DB_URL=${local.db_url}"
 }

@@ -70,14 +70,16 @@ resource "aws_security_group" "votewave_sg" {
     from_port   = 5001
     to_port     = 5001
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = [var.allowed_ip]
+    description = "Restricted backend API access"
   }
 
   ingress {
     from_port   = 5002
     to_port     = 5002
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = [var.allowed_ip]
+    description = "Restricted backend API access"
   }
 
   ingress {
@@ -91,7 +93,7 @@ resource "aws_security_group" "votewave_sg" {
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = [var.allowed_ip]
   }
 
   tags = {
@@ -115,7 +117,7 @@ resource "aws_security_group" "votewave_rds_sg" {
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = [var.allowed_ip]
   }
 }
 
