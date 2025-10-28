@@ -567,12 +567,12 @@ caption["VoteWave Standards & API Guidelines"]
 
 ## 📜 License
 
-This project is open-source under the [MIT LICENSE](LICENSE)
+This project is open-source under the [MIT LICENSE](https://github.com/MrCh0p808/VoteWave/blob/main/LICENSE)
 .
 
 ## 🔖 Tags
 
-
+SocialAwareness. Social Media, Swadeshi, VoiceOfPeople 
 
 
 
