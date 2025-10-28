@@ -1,4 +1,5 @@
 # VoteWave : Cloud-Native Polling App
+
 <p align="center">
   <!-- Project Status -->
   <img src="https://img.shields.io/badge/Status-Active-brightgreen?style=flat-square" alt="Status" style="height:22px;">&nbsp;&nbsp;
@@ -70,269 +71,303 @@
 ---
 
 Welcome to **VoteWave**, my *Dhaansu* Terraform project for deploying a cloud-native polling/voting app on **AWS EC2** and **RDS Postgres**!  
-This repo automates the **entire infrastructure lifecycle**, from networking and security to compute, storage, and schema initialization.
+This repo automates the **entire infrastructure lifecycle**, from networking and security to compute, storage, schema initialization, and full observability.
 
 ---
 
 ## 📂 What's Inside?
 
-- 📖 **[STORY.md](docs/STORY.md)** – The journey and inspiration behind VoteWave  
+- 📖 **[STORY.md](docs/STORY.md)** – The journey, story, and vision behind VoteWave  
 - ⚙️ **[SETUP.md](docs/SETUP.md)** – Step-by-step setup and deployment guide  
 - 📑 **[DOCS.md](docs/DOCS.md)** – Phase-wise development and infrastructure documentation  
 
 ---
-## Architechture
-As Per : September-October 2025
+
+## Expanded Architecture (September–October 2025)
+
+VoteWave’s architecture is a full-stack playground where every piece talks cleanly to each other.
+
+### 1. External Layer: 
+Users and admins access a React + TypeScript UI handling login, profiles, polls, feeds, notifications, VoteBooth, and chat. State manages sessions, feeds, votes, and profiles, while API requests carry JWTs via axios/fetch.
+
+### 2. Public Infrastructure: 
+Requests hit an Application Load Balancer in the public subnet, then route to a private API Gateway. Security is tight -only allowed sources reach backend services on ports 5001–5002.
+
+### 3. Private Services: 
+Microservices sit behind the gateway:
+
+- Auth (login/profile), Profiles (metadata), Polls (create/vote/cache)
+- Follows, Expressions, Comments, Feed, Notifications, VoteBooth, Messaging
+- Planned services: Reactions, Reports
+
+### 4. Shared Cloud Resources: 
+PostgreSQL RDS stores relational data, Redis handles caching and pub/sub, and S3 stores media. Observability via CloudWatch, Prometheus, and Grafana tracks metrics, alerts, and traces.
+
+### 5. Infra & Dev Builds: 
+Terraform provisions VPCs, subnets, security groups, databases, and caches. Docker Compose spins up local environments mirroring production.
+
+### 6. Service Flow: 
+User → UI → API → ALB → API Gateway → microservices → shared resources. Every service knows where to get data, cache results, and push updates.
+
+<p>This setup is both sandbox and production-ready. I can iterate fast, scale services independently, monitor everything, and add new microservices, analytics, or reactions seamlessly. VoteWave is now a living ecosystem of microservices, cloud infra, and observability working together effortlessly.
+
+I want this diagram to reflect **all planned microservices**, the shared infra, observability, and dependencies.</p>
 
 ```mermaid
 ---
 config:
-  theme: redux-dark
+  theme: dark
   layout: elk
   look: classic
 ---
 flowchart LR
  subgraph EXT["🌍 External Systems (Public Internet)"]
-        USER(["User"])
+        USER(["End User / Admin"])
   end
- subgraph FE["🖥️ Frontend (React + TypeScript) — Public"]
-        UI(["Web UI\nLogin, Profile, Polls, Feed, Notifs, Booths, Chat"])
-        API(["API Client Layer\nfetch/axios"])
-        STATE(["React State\nSession, PollFeed, VoteButton, Profile"])
+ subgraph FE["🖥️ Frontend (React + TypeScript)  - Public"]
+        UI(["Web UI\nLogin, Profile, Polls, Feed, Notifications, VoteBooth, Chat"])
+        API(["API Client Layer\naxios/fetch\nHandles JWT"])
+        STATE(["React State\nSession, Feed, PollVote, Profile"])
   end
  subgraph PUB["Public Subnet"]
-        ALB[/"App Load Balancer"/]
+        ALB[/"Application Load Balancer\nRoutes to API Gateway"/]
   end
  subgraph PRIV["Private Subnet"]
-        APIGW[/"API Gateway"/]
-        SGNOTE(["🔒 SG Rules:\nOnly ALB or VPC CIDR allowed on ports 5001–5002"])
+        APIGW[/"API Gateway\nAuthorizes + Routes Requests"/]
+        SGNOTE(["Security Groups:\nOnly ALB or VPC CIDR\nPorts 5001–5002"])
   end
- subgraph NET["🏗️ AWS Networking"]
-    direction TB
-        PUB
-        PRIV
-        TF{{"Terraform (IaC)"}}
-        DOCKER{{"Docker Compose (Service Builds)"}}
+ subgraph NET["🏗️ Networking + Infrastructure"]
+        TF{{"Terraform - IaC\nCreates VPC, Subnets, SGs, RDS, Redis, S3"}}
+        DOCKER{{"Docker Compose / Dev Builds"}}
   end
- subgraph AUTH["Auth Service"]
-        AAPI(["Endpoints:\n/login, /register, /profile"])
-        ADB[("users db")]
+ subgraph SERVICES["🛠️ Microservices & Planned Services"]
+        AUTH["🔐 Auth Service\nLogin/Register/Profile"]
+        PROF["👤 Profiles\nUser Profiles & Metadata"]
+        POLLS["📊 Polls\nCreate, Vote, Cache Results"]
+        FOL["🔗 Follows\nFollow/Unfollow/List"]
+        EXPR["🌊 Expressions\nWave/Ripple"]
+        COMM["💬 Comments\nThreaded Poll Comments"]
+        FEED["📰 Feed & Discovery\nPersonalized feed, search, trends"]
+        NOTIF["🔔 Notifications\nList/Mark Read"]
+        BOOTH["🏛️ VoteBooth\nPin Poll, Join Booth"]
+        MSG["💬 Messaging\nWebSocket Chat / PubSub"]
+        REACTIONS["❤️ Reactions Service (Planned)\nLike / Clap / Emoji"]
+        REPORTS["📈 Reports Service (Planned)\nAnalytics / Election Reports"]
   end
- subgraph PROF["Profiles Service"]
-        PAPI(["Endpoints:\nget/update profile"])
-        PDB[("profiles db")]
-  end
- subgraph POLLS["Polls Service"]
-        POLAPI(["Endpoints:\ncreate poll, vote, get poll"])
-        POLDB[("polls, votes db")]
-        PBUCKET[["S3: poll covers"]]
-        PCACHE{{"Redis: poll cache"}}
-  end
- subgraph FOL["Follows Service"]
-        FAPI(["Endpoints:\nfollow, unfollow, list"])
-        FDB[("follows db")]
-  end
- subgraph EXPR["Expressions Service"]
-        EAPI(["Endpoints:\nadd/remove expression"])
-        EDB[("expressions db")]
-  end
- subgraph COM["Comments Service"]
-        CAPI(["Endpoints:\nadd/list/delete comment"])
-        CDB[("comments db")]
-  end
- subgraph FEED["Feed Service"]
-        FDAPI(["Endpoints:\nfeed, search, trending"])
-        FDDB[("aggregated data")]
-        FDSEARCH[/"Search Engine"/]
-  end
- subgraph NOTIF["Notifications Service"]
-        NAPI(["Endpoints:\nlist notifs, mark read"])
-        NDB[("notifications db")]
-  end
- subgraph BOOTH["VoteBooth Service"]
-        BAPI(["Endpoints:\ncreate/join/pin poll"])
-        BDB[("booths db")]
-  end
- subgraph MSG["Messaging Service"]
-        MAPI(["Endpoints:\nget msgs, post msg, ws chat"])
-        MDB[("messages db")]
-        MPUBSUB{{"Redis pub/sub"}}
-  end
- subgraph SHARED["Shared Cloud Resources — Private"]
-        RDS[("Postgres RDS")]
-        REDIS{{"Redis Cache"}}
-        S3[["S3 Buckets"]]
+ subgraph SHARED["☁️ Shared Cloud Resources  - Private"]
+        RDS[("🐘 PostgreSQL RDS\nUsers, Profiles, Polls, Follows, Expressions, Comments, Notifications")]
+        REDIS{{"⚡ Redis Cache\nPollResults, SessionStore, Pub/Sub"}}
+        S3[["🪣 S3 Buckets\npollCovers/, userUploads/"]]
+        OBS["🔭 Observability\nCloudWatch + Prometheus + Grafana"]
   end
     USER --> UI
     UI --> API
     API --> ALB
     ALB --> APIGW
-    APIGW --> AUTH & PROF & POLLS & FOL & EXPR & COM & FEED & NOTIF & BOOTH & MSG
-    AUTH --> ADB
-    PROF --> PDB
-    POLLS --> POLDB & PBUCKET & PCACHE
-    FOL --> FDB
-    EXPR --> EDB
-    COM --> CDB
-    FEED --> FDDB & FDSEARCH
-    NOTIF --> NDB
-    BOOTH --> BDB
-    MSG --> MDB & MPUBSUB
-    SHARED --> RDS & REDIS & S3
+    APIGW --> AUTH & PROF & POLLS & FOL & EXPR & COMM & FEED & NOTIF & BOOTH & MSG & REACTIONS & REPORTS
+    AUTH --> RDS
+    PROF --> RDS
+    POLLS --> RDS & S3 & REDIS
+    FOL --> RDS
+    EXPR --> RDS
+    COMM --> RDS
+    FEED --> RDS & REDIS
+    NOTIF --> RDS
+    BOOTH --> RDS
+    MSG --> RDS & REDIS
+    REACTIONS --> RDS
+    REPORTS --> RDS & S3
+    SHARED --> RDS & REDIS & S3 & OBS
     TF --> SHARED
-    DOCKER --> AUTH & PROF & POLLS & FOL & EXPR & COM & FEED & NOTIF & BOOTH & MSG
-    caption["VoteWave — Microservices Architecture with Network Security Boundary (Private Subnets + Restricted SGs)"]
-```
+    DOCKER --> AUTH & PROF & POLLS & FOL & EXPR & COMM & FEED & NOTIF & BOOTH & MSG
+    caption["VoteWave  - Full Microservices Architecture + Shared Infra + Observability Layer"]
+````
+
 ---
-## End-To-End Request Life-Cycle
+
+## 🧭 VoteWave Architecture Evolution (Old vs New)
+
 ```mermaid
+flowchart LR
+subgraph OLD["🌊 Phase 2 — Early Microservices + Basic Standards"]
+direction TB
+  OARCH["🏗️ Architecture<br>EC2 + RDS + S3 + Terraform (v1)"]
+  OAUTH["🔐 Auth Service<br>Login / Register / JWT"]
+  OPROF["👤 Profiles Service<br>Public Profile / Pic"]
+  OPOLLS["📊 Polls Service<br>Polls + Votes"]
+  OFOL["🔗 Follows Service"]
+  OEXPR["🌊 Expressions Service"]
+  OCOMM["💬 Comments Service"]
+  OFEED["📰 Feed Service<br>Trending + Search"]
+  ONOTIF["🔔 Notifications Service"]
+  OINFRA["☁️ Infra<br>Terraform + Docker + ALB"]
+  OSTD["📜 API Standards<br>PEP8 • REST nouns • JWT users<br>No observability"]
+end
+
+%% Spacer to visually separate columns
+EMPTY[ ]
+
+subgraph NEW["☁️ Phase 3 — Cloud-Native + Evolved Standards"]
+direction TB
+  NARCH["🏗️ Architecture<br>Terraform Full Stack + Private Subnets<br>ECR → ECS/EKS Pipeline"]
+  NAUTH["🔐 Auth v2<br>Refresh Tokens + Secrets Rotation"]
+  NPROF["👤 Profiles v2<br>Audit Logs → CloudWatch"]
+  NPOLLS["📊 Polls v2<br>Redis Cache + S3 Covers + Event Hooks"]
+  NFOL["🔗 Follows v2<br>Streams → Feed"]
+  NEXPR["🌊 Expressions v2<br>Metrics → Prometheus"]
+  NCOMM["💬 Comments v2<br>Moderation + Soft Delete"]
+  NFEED["📰 Feed v2<br>Redis + Search Engine (FTS)"]
+  NNOTIF["🔔 Notifications v2<br>Async Jobs + Bulk API"]
+  NBOOTH["🏛 VoteBooth (New)<br>Realtime Poll Rooms"]
+  NMSG["💬 Messaging (New)<br>WebSockets + Redis Pub/Sub"]
+  NREACT["😀 Reactions (New)<br>Likes / Claps / Emoji"]
+  NREPORTS["📈 Reports (New)<br>Aggregated Analytics → S3"]
+  NOBS["🔭 Observability Layer<br>CloudWatch + Prometheus + Grafana"]
+  NSEC["🔐 Security & IAM<br>AWS Secrets Manager + SG Hardening"]
+  NSTD["📜 API Standards v2<br>OpenAPI • Trace IDs • Rate Limits • Grafana Metrics"]
+end
+
+%% Connections between old and new
+OARCH --> NARCH
+OAUTH --> NAUTH
+OPROF --> NPROF
+OPOLLS --> NPOLLS
+OFOL --> NFOL
+OEXPR --> NEXPR
+OCOMM --> NCOMM
+OFEED --> NFEED
+ONOTIF --> NNOTIF
+OINFRA --> NOBS
+OSTD --> NSTD
+
+%% Newly added services
+NBOOTH -. Added .-> NMSG
+NMSG -. Realtime Chat .-> NOBS
+NREACT -. Reactions .-> NREPORTS
+NREPORTS -. Analytics .-> NOBS
+NSEC -. Security Upgrade .-> NARCH
+
+%% Style
+classDef old fill:#ffe8c6,stroke:#555,color:#000
+classDef new fill:#c2ffd8,stroke:#333,color:#000
+class OARCH,OAUTH,OPROF,OPOLLS,OFOL,OEXPR,OCOMM,OFEED,ONOTIF,OINFRA,OSTD old
+class NARCH,NAUTH,NPROF,NPOLLS,NFOL,NEXPR,NCOMM,NFEED,NNOTIF,NBOOTH,NMSG,NREACT,NREPORTS,NOBS,NSEC,NSTD new
+
+```
+
+## Microservice Dependencies & Observability
+
+This part maps how VoteWave’s microservices talk to shared resources and how we keep everything observable.
+
+### 1. Polls Service: 
+Caches poll results in Redis for fast retrieval and stores poll cover images in S3. This keeps the app responsive and media persistent.
+### 2. Feed Service: 
+Uses Redis to cache personalized feeds, so users get near-instant updates without hammering the database.
+### 3. Messaging Service: 
+Relies on Redis pub/sub channels to handle real-time chat, keeping messages flowing smoothly.
+### 4. Reports Service (Planned): 
+Pulls data from S3 to generate analytics and election reports without stressing the core database.
+### 5. Observability: 
+Every service -literally all of them -pushes logs and metrics to CloudWatch, Prometheus, and Grafana. 
+That means I can see everything from API performance to cache hits, trace requests across services, and set alerts for any hiccups.
+
+<p>Basically, Redis and S3 act like the shared brain and storage for microservices, while CloudWatch, Prometheus, and Grafana give me full visibility into the system. The services are decoupled but still talk cleanly through these shared resources, making debugging, scaling, and monitoring super smooth.</p>
+
+```mermaid
+flowchart LR
+    POLLS --> REDIS["Cache Poll Results"]
+    POLLS --> S3["Store Poll Covers"]
+    FEED --> REDIS["Feed Cache"]
+    MSG --> REDIS["Pub/Sub Channel"]
+    REPORTS --> S3["Generate Reports"]
+    ALL["All Services"] --> OBS["Logs & Metrics\nCloudWatch + Prometheus + Grafana"]
+```
+
 ---
-config:
-  theme: dark
+
+## CI/CD & Terraform Interaction
+
+I wanted Terraform to provision infra and GitHub Actions to handle builds and deployments, all in sync.
+
+```mermaid
+flowchart LR
+    Dev["Developer Push Code"] --> GH["GitHub Actions"]
+    GH --> Build["Build Docker Images"]
+    Build --> ECR["Push to AWS ECR"]
+    TF["Terraform Apply"] --> Infra["Provision VPC, RDS, Redis, S3, ALB, Secrets"]
+    Infra --> APIGW
+    ECR --> APIGW
+    APIGW --> Services["Microservices"]
+```
+
 ---
+
+## End-to-End Request Flow (Expanded)
+
+```mermaid
 sequenceDiagram
     autonumber
     participant U as 👤 User
-    participant UI as 🖥️ Web UI (React)
-    participant ALB as ⚖️ ALB (Load Balancer)
+    participant UI as 🖥️ Web UI
+    participant ALB as ⚖️ ALB
     participant APIGW as 🚪 API Gateway
     participant AUTH as 🔐 Auth Service
-    participant PROFILES as 🗂️ Profiles Service
     participant POLLS as 📊 Polls Service
-    participant FOLLOWS as 🔗 Follows Service
-    participant EXPR as 🌊 Expressions Service
-    participant COMMENTS as 💬 Comments Service
-    participant FEED as 📰 Feed Service
-    participant NOTIFS as 🔔 Notifications Service
-    participant BOOTH as 🏛️ VoteBooth Service
-    participant MSG as 💬 Messaging Service
-    participant RDS as 🐘 DB (Postgres)
-    participant REDIS as ⚡ Cache (Redis)
-    participant S3 as 🪣 Storage (S3)
-    participant SEARCH as 🔍 Search Engine
-    U->>UI: Submit login/register
-    UI->>ALB: HTTP request
+    participant FEED as 📰 Feed
+    participant MSG as 💬 Messaging
+    participant RDS as 🐘 DB
+    participant REDIS as ⚡ Cache
+    participant S3 as 🪣 Storage
+
+    U->>UI: Login or Register
+    UI->>ALB: Request
     ALB->>APIGW: Forward
-    APIGW->>AUTH: /login or /register
-    AUTH->>RDS: Verify/insert user
-    RDS-->>AUTH: userId + token
-    AUTH-->>APIGW: Auth success
-    APIGW-->>UI: Return token
-    UI->>U: Session stored
-    U->>UI: Update profile
-    UI->>ALB: API call
-    ALB->>APIGW: Forward
-    APIGW->>PROFILES: /profiles
-    PROFILES->>RDS: Update profiles table
-    PROFILES-->>APIGW: Success
-    APIGW-->>UI: Profile updated
-    UI->>U: Profile refreshed
-    U->>UI: Create poll (Q + options + cover)
-    UI->>ALB: API call
-    ALB->>APIGW: Forward
-    APIGW->>POLLS: /createPoll
-    POLLS->>RDS: Insert poll
-    POLLS->>S3: Upload cover
-    POLLS-->>APIGW: pollId returned
-    APIGW-->>UI: Poll created
-    UI->>U: Poll visible
-    U->>UI: Cast vote
-    UI->>ALB: API call
-    ALB->>APIGW: Forward
+    APIGW->>AUTH: /login
+    AUTH->>RDS: Verify user
+    RDS-->>AUTH: Return token
+    AUTH-->>UI: JWT
+    UI->>APIGW: Fetch Feed / Polls
+    APIGW->>FEED: /feed
+    FEED->>RDS: Aggregate
+    FEED->>REDIS: Update cache
+    UI->>APIGW: Vote / Reaction
     APIGW->>POLLS: /vote
     POLLS->>RDS: Insert vote
-    POLLS->>REDIS: Update poll cache
-    POLLS-->>APIGW: Vote success
-    APIGW-->>UI: Updated results
-    UI->>U: Vote shown
-    U->>UI: Add expression
-    UI->>ALB: API call
-    ALB->>APIGW: Forward
-    APIGW->>EXPR: /expressions
-    EXPR->>RDS: Insert expression
-    EXPR-->>APIGW: Saved
-    APIGW-->>UI: Update UI
-    UI->>U: Expression visible
-    U->>UI: Post comment
-    UI->>ALB: API call
-    ALB->>APIGW: Forward
-    APIGW->>COMMENTS: /comments
-    COMMENTS->>RDS: Insert comment
-    COMMENTS-->>APIGW: Saved
-    APIGW-->>UI: Display comment
-    UI->>U: Comment visible
-    U->>UI: Follow user
-    UI->>ALB: API call
-    ALB->>APIGW: Forward
-    APIGW->>FOLLOWS: /follows
-    FOLLOWS->>RDS: Insert follow
-    FOLLOWS-->>APIGW: Success
-    APIGW-->>UI: Follow confirmed
-    UI->>U: Feed connections updated
-    U->>UI: Open feed
-    UI->>ALB: API call
-    ALB->>APIGW: Forward
-    APIGW->>FEED: /feed
-    FEED->>RDS: Query polls/follows/expr
-    FEED->>SEARCH: Run text search
-    FEED->>S3: Get media
-    FEED-->>APIGW: Feed data
-    APIGW-->>UI: Deliver feed
-    UI->>U: Personalized feed
-    NOTIFS->>RDS: Insert notif (wave/comment/follow)
-    U->>UI: Check notifs
-    UI->>ALB: API call
-    ALB->>APIGW: Forward
-    APIGW->>NOTIFS: /notifications
-    NOTIFS->>RDS: Fetch notifs
-    NOTIFS-->>APIGW: List returned
-    APIGW-->>UI: Deliver notifs
-    UI->>U: Notifs visible
-    U->>UI: Join booth
-    UI->>ALB: API call
-    ALB->>APIGW: Forward
-    APIGW->>BOOTH: /booths/join
-    BOOTH->>RDS: Update booth_members
-    BOOTH-->>APIGW: Join confirmed
-    APIGW-->>UI: Booth joined
-    UI->>U: Booth page refreshed
-    U->>UI: Send booth message
-    UI->>ALB: WS/HTTP request
-    ALB->>APIGW: Forward
-    APIGW->>MSG: /messages or WS
-    MSG->>MDB: Save message
+    POLLS->>REDIS: Update cache
+    UI->>APIGW: Upload media
+    APIGW->>S3: Store cover images
+    UI->>APIGW: Chat
+    APIGW->>MSG: Send message
     MSG->>REDIS: Publish event
-    MSG-->>APIGW: Ack
-    APIGW-->>UI: Message delivered
-    UI->>U: Chat updated
-
 ```
+
 ---
-## 🚀 Quickstart
 
-Make sure you have [Terraform](https://www.terraform.io/downloads) installed and your AWS credentials configured.
+## End-to-End Request LifeCycle
 
-### Apply infrastructure
-Now, provision the core application infrastructure. This process is fully automated and does not require you to provide any passwords manually.
+```mermaid
+sequenceDiagram
+    autonumber
+    participant U as 👤 User
+    participant UI as Frontend
+    participant ALB as ⚖️ ALB
+    participant APIGW as API Gateway
+    participant S as Services
+    participant DB as RDS
+    participant Cache as Redis
 
-```bash
-# Navigate to the main infrastructure directory
-cd infra/
-
-# Initialize Terraform to connect to your remote S3 backend
-terraform init
-
-# Apply the configuration to build the infrastructure
-# No variables are needed.
-terraform apply --auto-approve
+    U->>UI: Submit action
+    UI->>ALB: Forward request
+    ALB->>APIGW: Route
+    APIGW->>S: Target service
+    S->>DB: Read/Write
+    S->>Cache: Update cache or pub/sub
+    S-->>APIGW: Response
+    APIGW-->>UI: Send data
+    UI->>U: Display update
 ```
-### Retrieve the Generated Database Password
-The infrastructure now uses AWS Secrets Manager and a randomly generated password for maximum security. To view the new password for manual inspection or testing, you can use the output command: 
 
-```bash
-# This will display the generated password
-terraform output -sensitive db_password
-```
+---
 ## ⚡ Recommended Setup
 
 ### Export AWS Credentials
@@ -572,18 +607,6 @@ This project is open-source under the [MIT LICENSE](https://github.com/MrCh0p808
 
 ## 🔖 Tags
 
-SocialAwareness. Social Media, Swadeshi, VoiceOfPeople 
-
-
-
-
-
-
-
-
-
-
-
-
+SocialAwareness. Social Media, Swadeshi, VoiceOfPeople
 
 
