@@ -291,7 +291,5 @@ Every automation I wrote replaced one of my old mistakes.
 Now, with Terraform doing the heavy lifting, I can finally say this infrastructure almost runs itself.
 
 ```
----
 
-Would you like a **short companion guide (`SETUP_LOCAL.md`)** next, showing just local Docker Compose and mock AWS Secrets emulation for offline dev?
-```
+
