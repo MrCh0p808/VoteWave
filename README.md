@@ -254,7 +254,43 @@ class OARCH,OAUTH,OPROF,OPOLLS,OFOL,OEXPR,OCOMM,OFEED,ONOTIF,OINFRA,OSTD old
 class NARCH,NAUTH,NPROF,NPOLLS,NFOL,NEXPR,NCOMM,NFEED,NNOTIF,NBOOTH,NMSG,NREACT,NREPORTS,NOBS,NSEC,NSTD new
 
 ```
+## FrontEnd Architecture
 
+```mermaid
+---
+config:
+  theme: neo-dark
+  layout: dagre
+---
+flowchart LR
+ subgraph FRONTEND["🎨 VoteWave Frontend (Vite + React + TS)"]
+    direction TB
+        UI["🧩 UI & Pages<br>(e.g., EnhancedHomeFeed.tsx, DashboardLayout)"]
+        HOOKS["🪝 Hooks Layer<br>(e.g., useFeed, useAuth, useComments)"]
+        API_LAYER["📡 Feature API Layer<br>(e.g., feedApi.ts, authApi.ts, messagingApi.ts)"]
+        CLIENT["🔐 Centralized API Client<br>(lib/api/client.ts with JWT interceptors)"]
+        AUTHCTX["👤 AuthContext<br>(context/AuthContext.tsx)"]
+  end
+ subgraph BACKEND["🧱 Backend Microservices (AWS + Terraform + Docker)"]
+    direction TB
+        AUTH["🔑 Auth Service<br>/login / register / refresh"]
+        PROFILES["🪪 Profiles Service<br>/user profiles & settings"]
+        POLLS["🗳️ Polls Service<br>/create / vote / list"]
+        FEED["📰 Feed Service<br>/polls/feed / trending"]
+        COMMENTS["💬 Comments Service<br>/comments/polls/:id"]
+        FOLLOWS["🤝 Follows Service<br>/follows/:userId"]
+        EXPRESSIONS["❤️ Expressions Service<br>/like / unlike"]
+        NOTIFS["🔔 Notifications Service<br>/get / markAsRead"]
+        MESSAGING["📨 Messaging Service<br>/conversations / messages"]
+        VOTEBOOTH["🏛️ VoteBooth Service<br>/group polling spaces"]
+  end
+    UI --> HOOKS & AUTHCTX
+    HOOKS --> API_LAYER
+    API_LAYER --> CLIENT
+    CLIENT --> AUTH & PROFILES & POLLS & FEED & COMMENTS & FOLLOWS & EXPRESSIONS & NOTIFS & MESSAGING & VOTEBOOTH
+
+```
+---
 ## Microservice Dependencies & Observability
 
 This part maps how VoteWave’s microservices talk to shared resources and how we keep everything observable.
@@ -608,6 +644,7 @@ This project is open-source under the [MIT LICENSE](https://github.com/MrCh0p808
 ## 🔖 Tags
 
 SocialAwareness. Social Media, Swadeshi, VoiceOfPeople
+
 
 
 
