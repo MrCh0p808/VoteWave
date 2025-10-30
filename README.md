@@ -125,40 +125,40 @@ flowchart LR
         USER(["End User / Admin"])
   end
  subgraph FE["🖥️ Frontend (React + TypeScript)  - Public"]
-        UI(["Web UI\nLogin, Profile, Polls, Feed, Notifications, VoteBooth, Chat"])
-        API(["API Client Layer\naxios/fetch\nHandles JWT"])
-        STATE(["React State\nSession, Feed, PollVote, Profile"])
+        UI(["Web UI<br>Login, Profile, Polls, Feed, Notifications, VoteBooth, Chat"])
+        API(["API Client Layer<br>axios/fetch<br>Handles JWT"])
+        STATE(["React State<br>Session, Feed, PollVote, Profile"])
   end
  subgraph PUB["Public Subnet"]
-        ALB[/"Application Load Balancer\nRoutes to API Gateway"/]
+        ALB[/"Application Load Balancer<br>Routes to API Gateway"/]
   end
  subgraph PRIV["Private Subnet"]
-        APIGW[/"API Gateway\nAuthorizes + Routes Requests"/]
-        SGNOTE(["Security Groups:\nOnly ALB or VPC CIDR\nPorts 5001–5002"])
+        APIGW[/"API Gateway<br>Authorizes + Routes Requests"/]
+        SGNOTE(["Security Groups:<br>Only ALB or VPC CIDR<br>Ports 5001–5002"])
   end
  subgraph NET["🏗️ Networking + Infrastructure"]
-        TF{{"Terraform - IaC\nCreates VPC, Subnets, SGs, RDS, Redis, S3"}}
+        TF{{"Terraform - IaC<br>Creates VPC, Subnets, SGs, RDS, Redis, S3"}}
         DOCKER{{"Docker Compose / Dev Builds"}}
   end
  subgraph SERVICES["🛠️ Microservices & Planned Services"]
-        AUTH["🔐 Auth Service\nLogin/Register/Profile"]
-        PROF["👤 Profiles\nUser Profiles & Metadata"]
-        POLLS["📊 Polls\nCreate, Vote, Cache Results"]
-        FOL["🔗 Follows\nFollow/Unfollow/List"]
-        EXPR["🌊 Expressions\nWave/Ripple"]
-        COMM["💬 Comments\nThreaded Poll Comments"]
-        FEED["📰 Feed & Discovery\nPersonalized feed, search, trends"]
-        NOTIF["🔔 Notifications\nList/Mark Read"]
-        BOOTH["🏛️ VoteBooth\nPin Poll, Join Booth"]
-        MSG["💬 Messaging\nWebSocket Chat / PubSub"]
-        REACTIONS["❤️ Reactions Service (Planned)\nLike / Clap / Emoji"]
-        REPORTS["📈 Reports Service (Planned)\nAnalytics / Election Reports"]
+        AUTH["🔐 Auth Service<br>Login/Register/Profile"]
+        PROF["👤 Profiles<br>User Profiles & Metadata"]
+        POLLS["📊 Polls<br>Create, Vote, Cache Results"]
+        FOL["🔗 Follows<br>Follow/Unfollow/List"]
+        EXPR["🌊 Expressions<br>Wave/Ripple"]
+        COMM["💬 Comments<br>Threaded Poll Comments"]
+        FEED["📰 Feed & Discovery<br>Personalized feed, search, trends"]
+        NOTIF["🔔 Notifications<br>List/Mark Read"]
+        BOOTH["🏛️ VoteBooth<br>Pin Poll, Join Booth"]
+        MSG["💬 Messaging<br>WebSocket Chat / PubSub"]
+        REACTIONS["❤️ Reactions Service (Planned)<br>Like / Clap / Emoji"]
+        REPORTS["📈 Reports Service (Planned)<br>Analytics / Election Reports"]
   end
  subgraph SHARED["☁️ Shared Cloud Resources  - Private"]
-        RDS[("🐘 PostgreSQL RDS\nUsers, Profiles, Polls, Follows, Expressions, Comments, Notifications")]
-        REDIS{{"⚡ Redis Cache\nPollResults, SessionStore, Pub/Sub"}}
-        S3[["🪣 S3 Buckets\npollCovers/, userUploads/"]]
-        OBS["🔭 Observability\nCloudWatch + Prometheus + Grafana"]
+        RDS[("🐘 PostgreSQL RDS<br>Users, Profiles, Polls, Follows, Expressions, Comments, Notifications")]
+        REDIS{{"⚡ Redis Cache<br>PollResults, SessionStore, Pub/Sub"}}
+        S3[["🪣 S3 Buckets<br>pollCovers/, userUploads/"]]
+        OBS["🔭 Observability<br>CloudWatch + Prometheus + Grafana"]
   end
     USER --> UI
     UI --> API
@@ -280,7 +280,7 @@ flowchart LR
     FEED --> REDIS["Feed Cache"]
     MSG --> REDIS["Pub/Sub Channel"]
     REPORTS --> S3["Generate Reports"]
-    ALL["All Services"] --> OBS["Logs & Metrics\nCloudWatch + Prometheus + Grafana"]
+    ALL["All Services"] --> OBS["Logs & Metrics<br>CloudWatch + Prometheus + Grafana"]
 ```
 
 ---
@@ -390,49 +390,49 @@ config:
 flowchart LR
  subgraph Auth["🔐 Authentication Service"]
         AuthDesc["Purpose: Authenticate users, register, issue tokens"]
-        AuthAPI["API Endpoints:\nPOST /auth/register\nPOST /auth/login\nGET /auth/profile"]
-        AuthDB["DB Schema:\nusers(id, email, password_hash, created_at)"]
+        AuthAPI["API Endpoints:<br>POST /auth/register<br>POST /auth/login<br>GET /auth/profile"]
+        AuthDB["DB Schema:<br>users(id, email, password_hash, created_at)"]
   end
  subgraph Profiles["👤 Profiles & Identity Service"]
         ProfDesc["Purpose: Manage public profiles (bio, pic)"]
-        ProfAPI["API Endpoints:\nGET /profiles/{id}\nPUT /profiles"]
-        ProfDB["DB Schema:\nprofiles(user_id, username, bio, profile_pic_url)"]
+        ProfAPI["API Endpoints:<br>GET /profiles/{id}<br>PUT /profiles"]
+        ProfDB["DB Schema:<br>profiles(user_id, username, bio, profile_pic_url)"]
   end
  subgraph Polls["📊 Polls Service"]
         PollsDesc["Purpose: Create polls, votes, cache results"]
-        PollsAPI["API Endpoints:\nPOST /polls/create\nPOST /polls/vote\nGET /polls/{id}"]
-        PollsDB["DB Schema:\npolls(id, question, options[], cover_img_url)\nvotes(id, poll_id, user_id, option_index)"]
+        PollsAPI["API Endpoints:<br>POST /polls/create<br>POST /polls/vote<br>GET /polls/{id}"]
+        PollsDB["DB Schema:<br>polls(id, question, options[], cover_img_url)<br>votes(id, poll_id, user_id, option_index)"]
   end
  subgraph Follows["🔗 Follows Service"]
         FollowsDesc["Purpose: Manage follow relationships"]
-        FollowsAPI["API Endpoints:\nPOST /follows/{id}\nDELETE /follows/{id}\nGET /followers/{id}\nGET /following/{id}"]
-        FollowsDB["DB Schema:\nfollows(follower_id, followed_id, created_at)"]
+        FollowsAPI["API Endpoints:<br>POST /follows/{id}<br>DELETE /follows/{id}<br>GET /followers/{id}<br>GET /following/{id}"]
+        FollowsDB["DB Schema:<br>follows(follower_id, followed_id, created_at)"]
   end
  subgraph Expressions["🌊 Expressions Service"]
         ExprDesc["Purpose: Manage Waves (strong) & Ripples (soft)"]
-        ExprAPI["API Endpoints:\nPOST /expressions/{item_id}\nDELETE /expressions/{item_id}"]
-        ExprDB["DB Schema:\nexpressions(id, user_id, item_id, type: wave|ripple, created_at)"]
+        ExprAPI["API Endpoints:<br>POST /expressions/{item_id}<br>DELETE /expressions/{item_id}"]
+        ExprDB["DB Schema:<br>expressions(id, user_id, item_id, type: wave|ripple, created_at)"]
   end
  subgraph Comments["💬 Comments Service"]
         CommDesc["Purpose: Threaded discussions under polls"]
-        CommAPI["API Endpoints:\nPOST /comments/{item_id}\nGET /comments/{item_id}\nDELETE /comments/{comment_id}"]
-        CommDB["DB Schema:\ncomments(id, user_id, item_id, text, created_at)"]
+        CommAPI["API Endpoints:<br>POST /comments/{item_id}<br>GET /comments/{item_id}<br>DELETE /comments/{comment_id}"]
+        CommDB["DB Schema:<br>comments(id, user_id, item_id, text, created_at)"]
   end
  subgraph Feed["📰 Feed & Discovery Service"]
         FeedDesc["Purpose: Personalized feeds, search, trending"]
-        FeedAPI["API Endpoints:\nGET /feed\nGET /search\nGET /explore/trending"]
-        FeedLogic["Business Logic:\nCombine follows, engagement, trends\nUse Postgres FTS/Elasticsearch"]
+        FeedAPI["API Endpoints:<br>GET /feed<br>GET /search<br>GET /explore/trending"]
+        FeedLogic["Business Logic:<br>Combine follows, engagement, trends<br>Use Postgres FTS/Elasticsearch"]
   end
  subgraph Notifs["🔔 Notifications Service"]
         NotifDesc["Purpose: Real-time user notifications"]
-        NotifAPI["API Endpoints:\nGET /notifications\nPOST /notifications/mark-read"]
-        NotifDB["DB Schema:\nnotifications(id, recipient_id, sender_id, type, content_id, is_read, created_at)"]
+        NotifAPI["API Endpoints:<br>GET /notifications<br>POST /notifications/mark-read"]
+        NotifDB["DB Schema:<br>notifications(id, recipient_id, sender_id, type, content_id, is_read, created_at)"]
   end
  subgraph Infra["☁️ Shared Infrastructure"]
-        RDS["🐘 PostgreSQL RDS:\nusers, profiles, polls, follows, expressions, comments, notifications"]
-        Redis["⚡ Redis:\npollResultsCache, sessionStore"]
-        S3["🪣 S3:\npollCovers/, userUploads/"]
-        Tools["Terraform: provision infra\nDocker: containerize services\nALB+API GW: route requests"]
+        RDS["🐘 PostgreSQL RDS:<br>users, profiles, polls, follows, expressions, comments, notifications"]
+        Redis["⚡ Redis:<br>pollResultsCache, sessionStore"]
+        S3["🪣 S3:<br>pollCovers/, userUploads/"]
+        Tools["Terraform: provision infra<br>Docker: containerize services<br>ALB+API GW: route requests"]
   end
  subgraph ARCH["📖 VoteWave Microservices Architecture"]
     direction TB
@@ -608,5 +608,6 @@ This project is open-source under the [MIT LICENSE](https://github.com/MrCh0p808
 ## 🔖 Tags
 
 SocialAwareness. Social Media, Swadeshi, VoiceOfPeople
+
 
 
